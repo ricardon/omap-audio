@@ -701,6 +701,7 @@ static const struct ti_hdmi_ip_ops omap4_hdmi_functions = {
 	.audio_stop		=       ti_hdmi_4xxx_audio_stop,
 	.audio_config		=	ti_hdmi_4xxx_audio_config,
 #endif
+	.irq_handler		=	ti_hdmi_4xxx_irq_handler,
 
 };
 
@@ -714,6 +715,7 @@ static const struct ti_hdmi_ip_ops omap5_hdmi_functions = {
 	.pll_enable		=	ti_hdmi_4xxx_pll_enable,
 	.pll_disable		=	ti_hdmi_4xxx_pll_disable,
 	.video_enable		=	ti_hdmi_4xxx_wp_video_start,
+	.irq_handler		=	ti_hdmi_4xxx_irq_handler,
 
 };
 
