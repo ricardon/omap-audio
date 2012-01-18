@@ -500,6 +500,11 @@ static const struct ti_hdmi_ip_ops omap4_hdmi_functions = {
 #if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
 	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
 	.audio_enable		=       ti_hdmi_4xxx_audio_enable,
+	.audio_dma_cfg		=	hdmi_wp_audio_config_dma,
+	.audio_core_cfg		=	ti_hdmi_4xxx_core_audio_config,
+	.audio_fmt_cfg		=	hdmi_wp_audio_config_format,
+	.audio_if_cfg		=
+		ti_hdmi_4xxx_core_audio_infoframe_config,
 #endif
 
 };

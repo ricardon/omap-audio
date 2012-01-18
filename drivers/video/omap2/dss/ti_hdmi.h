@@ -22,6 +22,10 @@
 #define _TI_HDMI_H
 
 struct hdmi_ip_data;
+struct hdmi_audio_format;
+struct hdmi_audio_dma;
+struct hdmi_core_audio_config;
+struct hdmi_core_infoframe_audio;
 
 enum hdmi_pll_pwr {
 	HDMI_PLLPWRCMD_ALLOFF = 0,
@@ -113,6 +117,18 @@ struct ti_hdmi_ip_ops {
 #if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
 	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
 	void (*audio_enable)(struct hdmi_ip_data *ip_data, bool start);
+
+	void (*audio_dma_cfg)(struct hdmi_ip_data *ip_data,
+					struct hdmi_audio_dma *aud_dma);
+
+	void (*audio_core_cfg)(struct hdmi_ip_data *ip_data,
+					struct hdmi_core_audio_config  *cfg);
+
+	void (*audio_fmt_cfg)(struct hdmi_ip_data *ip_data,
+					struct hdmi_audio_format *aud_fmt);
+
+	void (*audio_if_cfg)(struct hdmi_ip_data *ip_data,
+		struct hdmi_core_infoframe_audio *info_aud);
 #endif
 
 };
@@ -146,5 +162,13 @@ void ti_hdmi_4xxx_phy_dump(struct hdmi_ip_data *ip_data, struct seq_file *s);
 #if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
 	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
 void ti_hdmi_4xxx_audio_enable(struct hdmi_ip_data *ip_data, bool enable);
+void ti_hdmi_4xxx_core_audio_infoframe_config(struct hdmi_ip_data *ip_data,
+		struct hdmi_core_infoframe_audio *info_aud);
+void ti_hdmi_4xxx_core_audio_config(struct hdmi_ip_data *ip_data,
+					struct hdmi_core_audio_config *cfg);
+void hdmi_wp_audio_config_dma(struct hdmi_ip_data *ip_data,
+					struct hdmi_audio_dma *aud_dma);
+void hdmi_wp_audio_config_format(struct hdmi_ip_data *ip_data,
+					struct hdmi_audio_format *aud_fmt);
 #endif
 #endif
