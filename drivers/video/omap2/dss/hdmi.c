@@ -561,6 +561,12 @@ void omapdss_hdmi_display_disable(struct omap_dss_device *dssdev)
 	mutex_unlock(&hdmi.lock);
 }
 
+int omapdss_hdmi_get_hdmi_mode(void)
+{
+	return hdmi.ip_data.cfg.cm.mode;
+}
+EXPORT_SYMBOL(omapdss_hdmi_get_hdmi_mode);
+
 #if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
 	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
 

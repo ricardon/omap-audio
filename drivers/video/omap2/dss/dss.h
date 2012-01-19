@@ -520,6 +520,7 @@ int omapdss_hdmi_read_edid(u8 *buf, int len);
 bool omapdss_hdmi_detect(void);
 int hdmi_panel_init(void);
 void hdmi_panel_exit(void);
+int omapdss_hdmi_get_hdmi_mode(void);
 
 /* RFBI */
 #ifdef CONFIG_OMAP2_DSS_RFBI
