@@ -21,6 +21,7 @@
 #include <linux/types.h>
 #include <linux/err.h>
 #include <linux/slab.h>
+#include <linux/export.h>
 
 #include <video/omapdss.h>
 #include <plat/cpu.h>
@@ -514,6 +515,7 @@ void dss_init_hdmi_ip_ops(struct hdmi_ip_data *ip_data)
 	if (cpu_is_omap44xx())
 		ip_data->ops = &omap4_hdmi_functions;
 }
+EXPORT_SYMBOL(dss_init_hdmi_ip_ops);
 #endif
 
 /* Functions returning values related to a DSS feature */
@@ -579,6 +581,7 @@ bool dss_has_feature(enum dss_feat_id id)
 {
 	return omap_current_dss_features->has_feature & id;
 }
+EXPORT_SYMBOL(dss_has_feature);
 
 void dss_feat_get_reg_field(enum dss_feat_reg_field id, u8 *start, u8 *end)
 {
