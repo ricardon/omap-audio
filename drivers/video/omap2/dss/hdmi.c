@@ -721,7 +721,7 @@ static int hdmi_audio_hw_params(struct snd_pcm_substream *substream,
 	/* Use parallel audio interface */
 	core_cfg.en_parallel_aud_input = true;
 
-	hdmi_core_audio_config(ip_data, &core_cfg);
+	ti_hdmi_4xxx_core_audio_config(ip_data, &core_cfg);
 
 	/*
 	 * Configure packet
@@ -735,7 +735,7 @@ static int hdmi_audio_hw_params(struct snd_pcm_substream *substream,
 	aud_if_cfg.db5_downmix_inh = false;
 	aud_if_cfg.db5_lsv = 0;
 
-	hdmi_core_audio_infoframe_config(ip_data, &aud_if_cfg);
+	ti_hdmi_4xxx_core_audio_infoframe_config(ip_data, &aud_if_cfg);
 	return 0;
 }
 

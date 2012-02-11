@@ -1077,7 +1077,7 @@ void hdmi_wp_audio_config_dma(struct hdmi_ip_data *ip_data,
 	hdmi_write_reg(hdmi_wp_base(ip_data), HDMI_WP_AUDIO_CTRL, r);
 }
 
-void hdmi_core_audio_config(struct hdmi_ip_data *ip_data,
+void ti_hdmi_4xxx_core_audio_config(struct hdmi_ip_data *ip_data,
 					struct hdmi_core_audio_config *cfg)
 {
 	u32 r;
@@ -1162,7 +1162,7 @@ void hdmi_core_audio_config(struct hdmi_ip_data *ip_data,
 	hdmi_write_reg(av_base, HDMI_CORE_AV_AUD_MODE, r);
 }
 
-void hdmi_core_audio_infoframe_config(struct hdmi_ip_data *ip_data,
+void ti_hdmi_4xxx_core_audio_infoframe_config(struct hdmi_ip_data *ip_data,
 		struct hdmi_core_infoframe_audio *info_aud)
 {
 	u8 val;
@@ -1271,7 +1271,7 @@ int hdmi_config_audio_acr(struct hdmi_ip_data *ip_data,
 	return 0;
 }
 
-void ti_hdmi_4xxx_wp_audio_enable(struct hdmi_ip_data *ip_data, bool enable)
+void ti_hdmi_4xxx_audio_enable(struct hdmi_ip_data *ip_data, bool enable)
 {
 	REG_FLD_MOD(hdmi_av_base(ip_data),
 				HDMI_CORE_AV_AUD_MODE, enable, 0, 0);
