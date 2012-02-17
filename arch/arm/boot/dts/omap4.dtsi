@@ -104,6 +104,56 @@
 			      <0x48240100 0x0100>;
 		};
 
+		dss {
+			compatible = "ti,omap4-dss";
+			ti,hwmods = "dss_core";
+
+			dispc {
+				compatible = "ti,omap4-dispc";
+				ti,hwmods = "dss_dispc";
+			};
+
+			dpi: dpi {
+				compatible = "ti,omap4-dpi";
+			};
+
+			sdi: sdi {
+				compatible = "ti,omap3-sdi";
+			};
+
+			dsi1: dsi@1 {
+				compatible = "ti,omap4-dsi";
+				ti,hwmods = "dss_dsi1";
+				id = <0>;
+				vdds_dsi-supply = <&vcxio>;
+			};
+
+			dsi2: dsi@2 {
+				compatible = "ti,omap4-dsi";
+				ti,hwmods = "dss_dsi2";
+				id = <1>;
+				vdds_dsi-supply = <&vcxio>;
+			};
+
+			hdmi {
+				compatible = "ti,omap4-hdmi";
+				ti,hwmods = "dss_hdmi";
+
+				hpd_gpio = <0>;
+				ls_oe = <0>;
+			};
+
+			rfbi: rfbi {
+				compatible = "ti,omap4-rfbi";
+				ti,hwmods = "dss_rfbi";
+			};
+
+			venc {
+				compatible = "ti,omap4-venc";
+				ti,hwmods = "dss_venc";
+			};
+		};
+
 		gpio1: gpio@4a310000 {
 			compatible = "ti,omap4-gpio";
 			ti,hwmods = "gpio1";

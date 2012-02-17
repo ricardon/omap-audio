@@ -158,3 +158,30 @@
 	bus-width = <4>;
 	ti,non-removable;
 };
+
+&dsi1 {
+	taal {
+		compatible = "ti,taal";
+
+		clk-lane = <1>;
+		clk-pol = <0>;
+		data1-lane = <2>;
+		data1-pol = <0>;
+		data2-lane = <3>;
+		data2-pol = <0>;
+
+		dsi-regn = <16>;
+		dsi-regm = <180>;
+		dsi-regm-dispc = <5>;
+		dsi-reg-dsi = <5>;
+
+		dsi-lp-clk-div = <10>;
+
+		/* taal stuff */
+		name = "taal";
+		reset-gpio = <102>;
+		/* use-ext-te; */
+		/* ext-te-gpio = <101>; */
+		esd-interval = <0>;
+	};
+};
