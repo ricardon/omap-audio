@@ -17,7 +17,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*#define DEBUG*/
+#define DEBUG
 
 #include <linux/module.h>
 #include <linux/delay.h>
@@ -121,6 +121,8 @@ struct taal_data {
 
 	struct omap_dss_device *dssdev;
 
+	struct nokia_dsi_panel_data panel_data;
+
 	bool enabled;
 	u8 rotate;
 	bool mirror;
@@ -152,7 +154,9 @@ struct taal_data {
 static inline struct nokia_dsi_panel_data
 *get_panel_data(const struct omap_dss_device *dssdev)
 {
-	return (struct nokia_dsi_panel_data *) dssdev->data;
+	struct taal_data *td = dev_get_drvdata(&dssdev->dev);
+
+	return &td->panel_data;
 }
 
 static void taal_esd_work(struct work_struct *work);
@@ -856,16 +860,58 @@ static void taal_hw_reset(struct omap_dss_device *dssdev)
 
 static int taal_probe(struct omap_dss_device *dssdev)
 {
+	struct device_node *node = dssdev->dev.of_node;
 	struct backlight_properties props;
 	struct taal_data *td;
 	struct backlight_device *bldev = NULL;
-	struct nokia_dsi_panel_data *panel_data = get_panel_data(dssdev);
+	struct nokia_dsi_panel_data *panel_data;
 	struct panel_config *panel_config = NULL;
 	int r, i;
 
 	dev_dbg(&dssdev->dev, "probe\n");
 
-	if (!panel_data || !panel_data->name) {
+	td = kzalloc(sizeof(*td), GFP_KERNEL);
+	if (!td) {
+		r = -ENOMEM;
+		goto err;
+	}
+
+
+#if 0
+	name = "taal";
+	reset-gpio = <102>;
+	/* use-ext-te */;
+	/* ext-te-gpio = <101>; */
+	esd-interval = <0>
+#endif
+
+
+	if (node) {
+		u32 v;
+		const char *s;
+
+		printk("reading props\n");
+
+		r = of_property_read_string(node, "name", &s);
+		td->panel_data.name = r ? NULL : s;
+
+		r = of_property_read_u32(node, "reset-gpio", &v);
+		td->panel_data.reset_gpio = r ? -1 : v;
+
+		r = of_property_read_u32(node, "esd-interval", &v);
+		td->panel_data.esd_interval = r ? 0 : v;
+
+	} else if (dssdev->data) {
+		struct nokia_dsi_panel_data *pdata = dssdev->data;
+
+		td->panel_data = *pdata;
+	} else {
+		return -ENODEV;
+	}
+
+	panel_data = &td->panel_data;
+
+	if (!panel_data->name) {
 		r = -EINVAL;
 		goto err;
 	}
@@ -886,12 +932,12 @@ static int taal_probe(struct omap_dss_device *dssdev)
 	dssdev->panel.timings = panel_config->timings;
 	dssdev->panel.dsi_pix_fmt = OMAP_DSS_DSI_FMT_RGB888;
 
-	td = kzalloc(sizeof(*td), GFP_KERNEL);
-	if (!td) {
-		r = -ENOMEM;
-		goto err;
-	}
+
+
+
+
 	td->dssdev = dssdev;
+	td->panel_data = *panel_data;
 	td->panel_config = panel_config;
 	td->esd_interval = panel_data->esd_interval;
 	td->ulps_enabled = false;
@@ -1798,6 +1844,19 @@ err:
 	mutex_unlock(&td->lock);
 }
 
+#if defined(CONFIG_OF)
+static const struct of_device_id taal_of_match[] = {
+	{
+		.compatible = "ti,taal",
+	},
+	{},
+};
+
+MODULE_DEVICE_TABLE(of, taal_of_match);
+#else
+#define dss_of_match NULL
+#endif
+
 static struct omap_dss_driver taal_driver = {
 	.probe		= taal_probe,
 	.remove		= __exit_p(taal_remove),
@@ -1826,6 +1885,7 @@ static struct omap_dss_driver taal_driver = {
 	.driver         = {
 		.name   = "taal",
 		.owner  = THIS_MODULE,
+		.of_match_table = taal_of_match,
 	},
 };
 
