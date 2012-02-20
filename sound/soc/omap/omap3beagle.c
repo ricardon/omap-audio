@@ -34,6 +34,7 @@
 #include "omap-mcbsp.h"
 #include "omap-pcm.h"
 
+/* McBSP2 slave, TWL4030 master */
 static int omap3beagle_hw_params(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
 {
@@ -80,6 +81,14 @@ static int omap3beagle_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 	}
 
+	/* Set McBSP clock to PER_96M_FCLK */
+	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_SYSCLK_CLKS_FCLK,
+				     96000000, SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set cpu system clock\n");
+		return ret;
+	}
+
 	return 0;
 }
 
@@ -87,23 +96,104 @@ static struct snd_soc_ops omap3beagle_ops = {
 	.hw_params = omap3beagle_hw_params,
 };
 
+/* McBSP2 master, TWL4030 slave */
+static int omap3beagle_slave_hw_params(struct snd_pcm_substream *substream,
+	struct snd_pcm_hw_params *params)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_dai *codec_dai = rtd->codec_dai;
+	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
+	unsigned int fmt;
+	int ret;
+
+	switch (params_channels(params)) {
+	case 2: /* Stereo I2S mode */
+		fmt =	SND_SOC_DAIFMT_I2S |
+			SND_SOC_DAIFMT_NB_NF |
+			SND_SOC_DAIFMT_CBS_CFS;
+		break;
+	case 4: /* Four channel TDM mode */
+		fmt =	SND_SOC_DAIFMT_DSP_A |
+			SND_SOC_DAIFMT_IB_NF |
+			SND_SOC_DAIFMT_CBS_CFS;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	/* Set codec DAI configuration */
+	ret = snd_soc_dai_set_fmt(codec_dai, fmt);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set codec DAI configuration\n");
+		return ret;
+	}
+
+	/* Set cpu DAI configuration */
+	ret = snd_soc_dai_set_fmt(cpu_dai, fmt);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set cpu DAI configuration\n");
+		return ret;
+	}
+
+	/* Set the codec system clock for DAC and ADC */
+	ret = snd_soc_dai_set_sysclk(codec_dai, 0, 26000000,
+				     SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set codec system clock\n");
+		return ret;
+	}
+
+	/* Set McBSP clock to external (CLKS) */
+	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_SYSCLK_CLKS_EXT,
+				     256 * params_rate(params),
+				     SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set cpu system clock\n");
+		return ret;
+	}
+
+	ret = snd_soc_dai_set_clkdiv(cpu_dai, OMAP_MCBSP_CLKGDV, 8);
+	if (ret < 0) {
+		printk(KERN_ERR "can't set SRG clock divider\n");
+		return ret;
+	}
+
+	return 0;
+}
+
+static struct snd_soc_ops omap3beagle_slave_ops = {
+	.hw_params = omap3beagle_slave_hw_params,
+};
+
 /* Digital audio interface glue - connects codec <--> CPU */
-static struct snd_soc_dai_link omap3beagle_dai = {
-	.name = "TWL4030",
-	.stream_name = "TWL4030",
-	.cpu_dai_name = "omap-mcbsp.2",
-	.platform_name = "omap-pcm-audio",
-	.codec_dai_name = "twl4030-hifi",
-	.codec_name = "twl4030-codec",
-	.ops = &omap3beagle_ops,
+static struct snd_soc_dai_link omap3beagle_dai[] = {
+	{
+		/* McBSP2 slave, TWL4030 master configuration */
+		.name = "TWL4030 master",
+		.stream_name = "TWL4030 master",
+		.cpu_dai_name = "omap-mcbsp.2",
+		.platform_name = "omap-pcm-audio",
+		.codec_dai_name = "twl4030-hifi",
+		.codec_name = "twl4030-codec",
+		.ops = &omap3beagle_ops,
+	}, {
+		/* McBSP2 master, TWL4030 slave configuration */
+		.name = "TWL4030 slave",
+		.stream_name = "TWL4030 slave",
+		.cpu_dai_name = "omap-mcbsp.2",
+		.platform_name = "omap-pcm-audio",
+		.codec_dai_name = "twl4030-hifi",
+		.codec_name = "twl4030-codec",
+		.ops = &omap3beagle_slave_ops,
+	},
 };
 
 /* Audio machine driver */
 static struct snd_soc_card snd_soc_omap3beagle = {
 	.name = "omap3beagle",
 	.owner = THIS_MODULE,
-	.dai_link = &omap3beagle_dai,
-	.num_links = 1,
+	.dai_link = omap3beagle_dai,
+	.num_links = ARRAY_SIZE(omap3beagle_dai),
 };
 
 static struct platform_device *omap3beagle_snd_device;
