@@ -37,6 +37,7 @@
 	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
 #include <sound/soc.h>
 #include <sound/pcm_params.h>
+#include <plat/omap_hwmod.h>
 #include "ti_hdmi_4xxx_ip.h"
 #endif
 
@@ -72,6 +73,11 @@ static struct {
 	int mode;
 
 	struct clk *sys_clk;
+
+#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
+	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
+	struct omap_hwmod *oh;
+#endif
 } hdmi;
 
 /*
@@ -582,12 +588,16 @@ static int hdmi_audio_trigger(struct snd_pcm_substream *substream, int cmd,
 	case SNDRV_PCM_TRIGGER_START:
 	case SNDRV_PCM_TRIGGER_RESUME:
 	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
+		omap_hwmod_set_slave_idlemode(hdmi.oh,
+			HWMOD_IDLEMODE_NO);
 		ip_data->ops->audio_enable(ip_data, true);
 		break;
 	case SNDRV_PCM_TRIGGER_STOP:
 	case SNDRV_PCM_TRIGGER_SUSPEND:
 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
 		ip_data->ops->audio_enable(ip_data, false);
+		omap_hwmod_set_slave_idlemode(hdmi.oh,
+			HWMOD_IDLEMODE_SMART_WKUP);
 		break;
 	default:
 		err = -EINVAL;
@@ -839,6 +849,16 @@ static int omapdss_hdmihw_probe(struct platform_device *pdev)
 #if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
 	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
 
+	hdmi.oh = omap_hwmod_lookup("dss_hdmi");
+	if (!hdmi.oh) {
+		dev_err(&pdev->dev, "Cannot find omap_hwmod for hdmi\n");
+		hdmi_panel_exit();
+		pm_runtime_disable(&pdev->dev);
+		hdmi_put_clocks();
+		iounmap(hdmi.ip_data.base_wp);
+		return -ENODEV;
+	}
+
 	/* Register ASoC codec DAI */
 	r = snd_soc_register_codec(&pdev->dev, &hdmi_audio_codec_drv,
 					&hdmi_codec_dai_drv, 1);
@@ -846,6 +866,7 @@ static int omapdss_hdmihw_probe(struct platform_device *pdev)
 		DSSERR("can't register ASoC HDMI audio codec\n");
 		return r;
 	}
+
 #endif
 	return 0;
 }
