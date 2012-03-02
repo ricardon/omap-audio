@@ -1267,10 +1267,14 @@ int hdmi_config_audio_acr(struct hdmi_ip_data *ip_data,
 
 void ti_hdmi_4xxx_wp_audio_enable(struct hdmi_ip_data *ip_data, bool enable)
 {
-	REG_FLD_MOD(hdmi_av_base(ip_data),
-				HDMI_CORE_AV_AUD_MODE, enable, 0, 0);
 	REG_FLD_MOD(hdmi_wp_base(ip_data),
 				HDMI_WP_AUDIO_CTRL, enable, 31, 31);
+}
+
+void ti_hdmi_4xxx_audio_start(struct hdmi_ip_data *ip_data, bool enable)
+{
+	REG_FLD_MOD(hdmi_av_base(ip_data),
+				HDMI_CORE_AV_AUD_MODE, enable, 0, 0);
 	REG_FLD_MOD(hdmi_wp_base(ip_data),
 				HDMI_WP_AUDIO_CTRL, enable, 30, 30);
 }
