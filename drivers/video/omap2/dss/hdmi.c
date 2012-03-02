@@ -198,7 +198,7 @@ static int get_timings_index(void)
 {
 	int code;
 
-	if (hdmi.mode == 0)
+	if (hdmi.mode == HDMI_DVI)
 		code = code_vesa[hdmi.code];
 	else
 		code = code_cea[hdmi.code];
