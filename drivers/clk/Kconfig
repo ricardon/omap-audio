@@ -34,4 +34,10 @@ config COMMON_CLK_DEBUG
 	  clk_flags, clk_prepare_count, clk_enable_count &
 	  clk_notifier_count.
 
+config CLK_PALMAS
+	tristate "Palmas PMIC Clock Support"
+	depends on MFD_PALMAS
+	help
+	   Enable clock support for the two clocks on Palmas PMIC chips
+
 endmenu
