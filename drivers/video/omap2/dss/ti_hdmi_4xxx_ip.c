@@ -1038,8 +1038,7 @@ void ti_hdmi_4xxx_phy_dump(struct hdmi_ip_data *ip_data, struct seq_file *s)
 	DUMPPHY(HDMI_TXPHY_PAD_CFG_CTRL);
 }
 
-#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
-	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
+#ifdef CONFIG_OMAP4_DSS_HDMI_AUDIO
 void hdmi_wp_audio_config_format(struct hdmi_ip_data *ip_data,
 					struct hdmi_audio_format *aud_fmt)
 {
@@ -1277,11 +1276,17 @@ void ti_hdmi_4xxx_wp_audio_enable(struct hdmi_ip_data *ip_data, bool enable)
 				HDMI_WP_AUDIO_CTRL, enable, 31, 31);
 }
 
-void ti_hdmi_4xxx_audio_start(struct hdmi_ip_data *ip_data, bool enable)
+void ti_hdmi_4xxx_audio_start(struct hdmi_ip_data *ip_data, bool start)
 {
+	if (start)
+		REG_FLD_MOD(hdmi_wp_base(ip_data),
+				HDMI_WP_SYSCONFIG, 1, 3, 2);
+	else
+		REG_FLD_MOD(hdmi_wp_base(ip_data),
+				HDMI_WP_SYSCONFIG, 3, 3, 2);
 	REG_FLD_MOD(hdmi_av_base(ip_data),
-				HDMI_CORE_AV_AUD_MODE, enable, 0, 0);
+				HDMI_CORE_AV_AUD_MODE, start, 0, 0);
 	REG_FLD_MOD(hdmi_wp_base(ip_data),
-				HDMI_WP_AUDIO_CTRL, enable, 30, 30);
+				HDMI_WP_AUDIO_CTRL, start, 30, 30);
 }
 #endif
