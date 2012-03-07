@@ -33,8 +33,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/clk.h>
 #include <video/omapdss.h>
-#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
-	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
+#ifdef CONFIG_OMAP4_DSS_HDMI_AUDIO
 #include <sound/soc.h>
 #include <sound/pcm_params.h>
 #include <plat/omap_hwmod.h>
@@ -74,8 +73,7 @@ static struct {
 
 	struct clk *sys_clk;
 
-#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
-	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
+#ifdef CONFIG_OMAP4_DSS_HDMI_AUDIO
 	struct omap_hwmod *oh;
 #endif
 } hdmi;

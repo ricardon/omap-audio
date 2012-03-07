@@ -68,6 +68,12 @@ config OMAP4_DSS_HDMI
 	  HDMI Interface. This adds the High Definition Multimedia Interface.
 	  See http://www.hdmi.org/ for HDMI specification.
 
+config OMAP4_DSS_HDMI_AUDIO
+	bool "HDMI support for audio"
+	depends on OMAP4_DSS_HDMI
+	help
+	  Audio support for the HDMI Interface.
+
 config OMAP2_DSS_SDI
 	bool "SDI support"
 	depends on ARCH_OMAP3
