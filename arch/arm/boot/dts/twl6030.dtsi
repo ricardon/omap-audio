@@ -66,6 +66,7 @@
 
 	vcxio: regulator@8 {
 		compatible = "ti,twl6030-vcxio";
+		regulator-always-on;
 	};
 
 	vusb: regulator@9 {
