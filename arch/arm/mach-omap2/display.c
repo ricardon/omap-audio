@@ -23,6 +23,8 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/delay.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
 
 #include <video/omapdss.h>
 #include <plat/omap_hwmod.h>
@@ -509,6 +511,7 @@ int __init omap_display_init_of(void)
 {
 	int r;
 	struct platform_device *pdev;
+	struct device_node *node;
 
 	static struct omap_dss_board_info board_data = {
 		.dsi_enable_pads = omap_dsi_enable_pads,
@@ -519,8 +522,19 @@ int __init omap_display_init_of(void)
 	omap_display_device.dev.platform_data = &board_data;
 
 	r = platform_device_register(&omap_display_device);
-	if (r < 0)
+	if (r < 0) {
 		printk(KERN_ERR "Unable to register OMAP-Display device\n");
+		return r;
+	}
 
-	return r;
+	node = of_find_node_by_name(NULL, "dss");
+	BUG_ON(!node);
+
+	pdev = of_find_device_by_node(node);
+	BUG_ON(!pdev);
+
+	r = of_platform_populate(node, NULL, NULL, &pdev->dev);
+	BUG_ON(r);
+
+	return 0;
 }

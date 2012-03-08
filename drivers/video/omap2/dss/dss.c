@@ -815,10 +815,6 @@ static int __init omap_dsshw_probe(struct platform_device *pdev)
 
 	dss_debugfs_create_file("dss", dss_dump_regs);
 
-	r = of_platform_populate(node, NULL, NULL, &pdev->dev);
-	if (r)
-		printk("OF populate FAILED %d\n", r);
-
 	return 0;
 
 err_runtime_get:
