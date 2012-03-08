@@ -565,13 +565,14 @@ void omapdss_hdmi_display_disable(struct omap_dss_device *dssdev)
 #ifdef CONFIG_OMAP4_DSS_HDMI_AUDIO
 int hdmi_audio_enable(bool enable)
 {
+	unsigned long flags;
 	DSSDBG("audio_enable\n");
 
-	spin_lock(&hdmi.hdmi_sp_lock);
+	spin_lock_irqsave(&hdmi.hdmi_sp_lock, flags);
 
 	hdmi.ip_data.ops->audio_enable(&hdmi.ip_data, enable);
 
-	spin_unlock(&hdmi.hdmi_sp_lock);
+	spin_unlock_irqrestore(&hdmi.hdmi_sp_lock, flags);
 
 	return 0;
 }
@@ -579,24 +580,27 @@ int hdmi_audio_enable(bool enable)
 
 int hdmi_audio_start(bool start)
 {
+	unsigned long flags;
 	DSSDBG("audio_enable\n");
 
-	spin_lock(&hdmi.hdmi_sp_lock);
+	spin_lock_irqsave(&hdmi.hdmi_sp_lock, flags);
 
 	hdmi.ip_data.ops->audio_start(&hdmi.ip_data, start);
 
-	spin_unlock(&hdmi.hdmi_sp_lock);
+	spin_unlock_irqrestore(&hdmi.hdmi_sp_lock, flags);
 
 	return 0;
 }
 
 int hdmi_get_mode()
 {
-	spin_lock(&hdmi.hdmi_sp_lock);
+	unsigned long flags;
+
+	spin_lock_irqsave(&hdmi.hdmi_sp_lock, flags);
 
 	return hdmi.ip_data.cfg.cm.mode;
 
-	spin_unlock(&hdmi.hdmi_sp_lock);
+	spin_unlock_irqrestore(&hdmi.hdmi_sp_lock, flags);
 }
 
 int hdmi_audio_config(struct snd_pcm_hw_params *params)
@@ -607,8 +611,9 @@ int hdmi_audio_config(struct snd_pcm_hw_params *params)
 	struct hdmi_core_infoframe_audio aud_if_cfg;
 	int err, n, cts;
 	enum hdmi_core_audio_sample_freq sample_freq;
+	unsigned long flags;
 
-	spin_lock(&hdmi.hdmi_sp_lock);
+	spin_lock_irqsave(&hdmi.hdmi_sp_lock, flags);
 
 	switch (params_format(params)) {
 	case SNDRV_PCM_FORMAT_S16_LE:
@@ -732,7 +737,7 @@ int hdmi_audio_config(struct snd_pcm_hw_params *params)
 
 	hdmi_core_audio_infoframe_config(&hdmi.ip_data, &aud_if_cfg);
 
-	spin_unlock(&hdmi.hdmi_sp_lock);
+	spin_unlock_irqrestore(&hdmi.hdmi_sp_lock, flags);
 
 	return 0;
 

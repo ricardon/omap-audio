@@ -242,14 +242,15 @@ static int hdmi_panel_audio_enable(struct omap_dss_device *dssdev, bool enable)
 static int hdmi_panel_audio_start(struct omap_dss_device *dssdev, bool start)
 {
 	int r;
+	unsigned long flags;
 
-	spin_lock(&hdmi.hdmi_sp_lock);
+	spin_lock_irqsave(&hdmi.hdmi_sp_lock, flags);
 	//mutex_lock(&hdmi.hdmi_lock);
 
 	r = hdmi_audio_start(start);
 
 	//mutex_unlock(&hdmi.hdmi_lock);
-	spin_unlock(&hdmi.hdmi_sp_lock);
+	spin_unlock_irqrestore(&hdmi.hdmi_sp_lock, flags);
 
 	return r;
 }
