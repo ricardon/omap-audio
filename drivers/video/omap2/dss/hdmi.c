@@ -36,7 +36,6 @@
 #ifdef CONFIG_OMAP4_DSS_HDMI_AUDIO
 #include <sound/soc.h>
 #include <sound/pcm_params.h>
-#include <plat/omap_hwmod.h>
 #include "ti_hdmi_4xxx_ip.h"
 #endif
 
@@ -65,6 +64,7 @@
 
 static struct {
 	struct mutex lock;
+	spinlock_t hdmi_sp_lock;
 	struct omap_display_platform_data *pdata;
 	struct platform_device *pdev;
 	struct hdmi_ip_data ip_data;
@@ -73,9 +73,6 @@ static struct {
 
 	struct clk *sys_clk;
 
-#ifdef CONFIG_OMAP4_DSS_HDMI_AUDIO
-	struct omap_hwmod *oh;
-#endif
 } hdmi;
 
 /*
@@ -565,57 +562,53 @@ void omapdss_hdmi_display_disable(struct omap_dss_device *dssdev)
 	mutex_unlock(&hdmi.lock);
 }
 
-#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
-	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
-
-static int hdmi_audio_trigger(struct snd_pcm_substream *substream, int cmd,
-				struct snd_soc_dai *dai)
+#ifdef CONFIG_OMAP4_DSS_HDMI_AUDIO
+int hdmi_audio_enable(bool enable)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
-	struct snd_soc_codec *codec = rtd->codec;
-	struct platform_device *pdev = to_platform_device(codec->dev);
-	struct hdmi_ip_data *ip_data = snd_soc_codec_get_drvdata(codec);
-	int err = 0;
+	DSSDBG("audio_enable\n");
 
-	if (!(ip_data->ops) && !(ip_data->ops->audio_enable)) {
-		dev_err(&pdev->dev, "Cannot enable/disable audio\n");
-		return -ENODEV;
-	}
+	spin_lock(&hdmi.hdmi_sp_lock);
 
-	switch (cmd) {
-	case SNDRV_PCM_TRIGGER_START:
-	case SNDRV_PCM_TRIGGER_RESUME:
-	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
-		omap_hwmod_set_slave_idlemode(hdmi.oh,
-			HWMOD_IDLEMODE_NO);
-		ip_data->ops->audio_enable(ip_data, true);
-		break;
-	case SNDRV_PCM_TRIGGER_STOP:
-	case SNDRV_PCM_TRIGGER_SUSPEND:
-	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
-		ip_data->ops->audio_enable(ip_data, false);
-		omap_hwmod_set_slave_idlemode(hdmi.oh,
-			HWMOD_IDLEMODE_SMART_WKUP);
-		break;
-	default:
-		err = -EINVAL;
-	}
-	return err;
+	hdmi.ip_data.ops->audio_enable(&hdmi.ip_data, enable);
+
+	spin_unlock(&hdmi.hdmi_sp_lock);
+
+	return 0;
 }
 
-static int hdmi_audio_hw_params(struct snd_pcm_substream *substream,
-				    struct snd_pcm_hw_params *params,
-				    struct snd_soc_dai *dai)
+
+int hdmi_audio_start(bool start)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
-	struct snd_soc_codec *codec = rtd->codec;
-	struct hdmi_ip_data *ip_data = snd_soc_codec_get_drvdata(codec);
+	DSSDBG("audio_enable\n");
+
+	spin_lock(&hdmi.hdmi_sp_lock);
+
+	hdmi.ip_data.ops->audio_start(&hdmi.ip_data, start);
+
+	spin_unlock(&hdmi.hdmi_sp_lock);
+
+	return 0;
+}
+
+int hdmi_get_mode()
+{
+	spin_lock(&hdmi.hdmi_sp_lock);
+
+	return hdmi.ip_data.cfg.cm.mode;
+
+	spin_unlock(&hdmi.hdmi_sp_lock);
+}
+
+int hdmi_audio_config(struct snd_pcm_hw_params *params)
+{
 	struct hdmi_audio_format audio_format;
 	struct hdmi_audio_dma audio_dma;
 	struct hdmi_core_audio_config core_cfg;
 	struct hdmi_core_infoframe_audio aud_if_cfg;
 	int err, n, cts;
 	enum hdmi_core_audio_sample_freq sample_freq;
+
+	spin_lock(&hdmi.hdmi_sp_lock);
 
 	switch (params_format(params)) {
 	case SNDRV_PCM_FORMAT_S16_LE:
@@ -660,7 +653,7 @@ static int hdmi_audio_hw_params(struct snd_pcm_substream *substream,
 		return -EINVAL;
 	}
 
-	err = hdmi_config_audio_acr(ip_data, params_rate(params), &n, &cts);
+	err = hdmi_config_audio_acr(&hdmi.ip_data, params_rate(params), &n, &cts);
 	if (err < 0)
 		return err;
 
@@ -676,8 +669,8 @@ static int hdmi_audio_hw_params(struct snd_pcm_substream *substream,
 	audio_dma.mode = HDMI_AUDIO_TRANSF_DMA;
 	audio_dma.fifo_threshold = 0x20; /* in number of samples */
 
-	hdmi_wp_audio_config_dma(ip_data, &audio_dma);
-	hdmi_wp_audio_config_format(ip_data, &audio_format);
+	hdmi_wp_audio_config_dma(&hdmi.ip_data, &audio_dma);
+	hdmi_wp_audio_config_format(&hdmi.ip_data, &audio_format);
 
 	/*
 	 * I2S config
@@ -723,7 +716,7 @@ static int hdmi_audio_hw_params(struct snd_pcm_substream *substream,
 	/* Use parallel audio interface */
 	core_cfg.en_parallel_aud_input = true;
 
-	hdmi_core_audio_config(ip_data, &core_cfg);
+	hdmi_core_audio_config(&hdmi.ip_data, &core_cfg);
 
 	/*
 	 * Configure packet
@@ -737,50 +730,14 @@ static int hdmi_audio_hw_params(struct snd_pcm_substream *substream,
 	aud_if_cfg.db5_downmix_inh = false;
 	aud_if_cfg.db5_lsv = 0;
 
-	hdmi_core_audio_infoframe_config(ip_data, &aud_if_cfg);
+	hdmi_core_audio_infoframe_config(&hdmi.ip_data, &aud_if_cfg);
+
+	spin_unlock(&hdmi.hdmi_sp_lock);
+
 	return 0;
+
 }
 
-static int hdmi_audio_startup(struct snd_pcm_substream *substream,
-				  struct snd_soc_dai *dai)
-{
-	if (!hdmi.mode) {
-		pr_err("Current video settings do not support audio.\n");
-		return -EIO;
-	}
-	return 0;
-}
-
-static int hdmi_audio_codec_probe(struct snd_soc_codec *codec)
-{
-	struct hdmi_ip_data *priv = &hdmi.ip_data;
-
-	snd_soc_codec_set_drvdata(codec, priv);
-	return 0;
-}
-
-static struct snd_soc_codec_driver hdmi_audio_codec_drv = {
-	.probe = hdmi_audio_codec_probe,
-};
-
-static struct snd_soc_dai_ops hdmi_audio_codec_ops = {
-	.hw_params = hdmi_audio_hw_params,
-	.trigger = hdmi_audio_trigger,
-	.startup = hdmi_audio_startup,
-};
-
-static struct snd_soc_dai_driver hdmi_codec_dai_drv = {
-		.name = "hdmi-audio-codec",
-		.playback = {
-			.channels_min = 2,
-			.channels_max = 2,
-			.rates = SNDRV_PCM_RATE_32000 |
-				SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE |
-				SNDRV_PCM_FMTBIT_S24_LE,
-		},
-		.ops = &hdmi_audio_codec_ops,
-};
 #endif
 
 static int hdmi_get_clocks(struct platform_device *pdev)
@@ -814,6 +771,7 @@ static int omapdss_hdmihw_probe(struct platform_device *pdev)
 	hdmi.pdev = pdev;
 
 	mutex_init(&hdmi.lock);
+	spin_lock_init(&hdmi.hdmi_sp_lock);
 
 	hdmi_mem = platform_get_resource(hdmi.pdev, IORESOURCE_MEM, 0);
 	if (!hdmi_mem) {
@@ -844,39 +802,12 @@ static int omapdss_hdmihw_probe(struct platform_device *pdev)
 
 	hdmi_panel_init();
 
-#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
-	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
-
-	hdmi.oh = omap_hwmod_lookup("dss_hdmi");
-	if (!hdmi.oh) {
-		dev_err(&pdev->dev, "Cannot find omap_hwmod for hdmi\n");
-		hdmi_panel_exit();
-		pm_runtime_disable(&pdev->dev);
-		hdmi_put_clocks();
-		iounmap(hdmi.ip_data.base_wp);
-		return -ENODEV;
-	}
-
-	/* Register ASoC codec DAI */
-	r = snd_soc_register_codec(&pdev->dev, &hdmi_audio_codec_drv,
-					&hdmi_codec_dai_drv, 1);
-	if (r) {
-		DSSERR("can't register ASoC HDMI audio codec\n");
-		return r;
-	}
-
-#endif
 	return 0;
 }
 
 static int omapdss_hdmihw_remove(struct platform_device *pdev)
 {
 	hdmi_panel_exit();
-
-#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
-	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
-	snd_soc_unregister_codec(&pdev->dev);
-#endif
 
 	pm_runtime_disable(&pdev->dev);
 
