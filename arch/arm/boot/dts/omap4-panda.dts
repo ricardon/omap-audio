@@ -96,7 +96,8 @@
 		data-lines = <24>;
 		channel = <2>;
 		enable-gpio = <0>;
-		ddc = <&dviddc>;
+		i2c-bus-num = <3>;
+		/* ddc = <&dviddc>; */
 	};
 };
 
