@@ -19,6 +19,7 @@
 #include <mach/hardware.h>
 #include <asm/hardware/gic.h>
 #include <asm/mach/arch.h>
+#include <video/omapdss.h>
 
 #include <plat/board.h>
 #include "common.h"
@@ -59,6 +60,7 @@ static void __init omap_generic_init(void)
 	omap_sdrc_init(NULL, NULL);
 
 	of_platform_populate(NULL, omap_dt_match_table, NULL, NULL);
+	omap_display_init_of();
 }
 
 #ifdef CONFIG_SOC_OMAP2420

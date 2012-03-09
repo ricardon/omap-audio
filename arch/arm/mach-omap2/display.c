@@ -23,6 +23,8 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/delay.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
 
 #include <video/omapdss.h>
 #include <plat/omap_hwmod.h>
@@ -520,4 +522,36 @@ int omap_dss_reset(struct omap_hwmod *oh)
 	r = (c == MAX_MODULE_SOFTRESET_WAIT) ? -ETIMEDOUT : 0;
 
 	return r;
+}
+
+int __init omap_display_init_of(void)
+{
+	int r;
+	struct platform_device *pdev;
+	struct device_node *node;
+
+	static struct omap_dss_board_info board_data = {
+		.dsi_enable_pads = omap_dsi_enable_pads,
+		.dsi_disable_pads = omap_dsi_disable_pads,
+		.get_context_loss_count = omap_pm_get_dev_context_loss_count,
+	};
+
+	omap_display_device.dev.platform_data = &board_data;
+
+	r = platform_device_register(&omap_display_device);
+	if (r < 0) {
+		printk(KERN_ERR "Unable to register OMAP-Display device\n");
+		return r;
+	}
+
+	node = of_find_node_by_name(NULL, "dss");
+	BUG_ON(!node);
+
+	pdev = of_find_device_by_node(node);
+	BUG_ON(!pdev);
+
+	r = of_platform_populate(node, NULL, NULL, &pdev->dev);
+	BUG_ON(r);
+
+	return 0;
 }
