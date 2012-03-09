@@ -849,12 +849,24 @@ static const struct dev_pm_ops hdmi_pm_ops = {
 	.runtime_resume = hdmi_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id hdmi_of_match[] = {
+	{
+		.compatible = "ti,omap4-hdmi",
+	},
+	{},
+};
+#else
+#define hdmi_of_match NULL
+#endif
+
 static struct platform_driver omapdss_hdmihw_driver = {
 	.remove         = __exit_p(omapdss_hdmihw_remove),
 	.driver         = {
 		.name   = "omapdss_hdmi",
 		.owner  = THIS_MODULE,
 		.pm	= &hdmi_pm_ops,
+		.of_match_table = hdmi_of_match,
 	},
 };
 

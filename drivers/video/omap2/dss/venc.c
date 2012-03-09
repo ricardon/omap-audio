@@ -956,12 +956,24 @@ static const struct dev_pm_ops venc_pm_ops = {
 	.runtime_resume = venc_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id venc_of_match[] = {
+	{
+		.compatible = "ti,omap4-venc",
+	},
+	{},
+};
+#else
+#define venc_of_match NULL
+#endif
+
 static struct platform_driver omap_venchw_driver = {
 	.remove         = __exit_p(omap_venchw_remove),
 	.driver         = {
 		.name   = "omapdss_venc",
 		.owner  = THIS_MODULE,
 		.pm	= &venc_pm_ops,
+		.of_match_table = venc_of_match,
 	},
 };
 

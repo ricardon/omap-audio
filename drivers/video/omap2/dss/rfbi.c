@@ -1041,12 +1041,24 @@ static const struct dev_pm_ops rfbi_pm_ops = {
 	.runtime_resume = rfbi_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id rfbi_of_match[] = {
+	{
+		.compatible = "ti,omap4-rfbi",
+	},
+	{},
+};
+#else
+#define rfbi_of_match NULL
+#endif
+
 static struct platform_driver omap_rfbihw_driver = {
 	.remove         = __exit_p(omap_rfbihw_remove),
 	.driver         = {
 		.name   = "omapdss_rfbi",
 		.owner  = THIS_MODULE,
 		.pm	= &rfbi_pm_ops,
+		.of_match_table = rfbi_of_match,
 	},
 };
 

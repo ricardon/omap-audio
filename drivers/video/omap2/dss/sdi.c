@@ -214,11 +214,23 @@ static int __exit omap_sdi_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#if defined(CONFIG_OF)
+static const struct of_device_id sdi_of_match[] = {
+	{
+		.compatible = "ti,omap3-sdi",
+	},
+	{},
+};
+#else
+#define sdi_of_match NULL
+#endif
+
 static struct platform_driver omap_sdi_driver = {
 	.remove         = __exit_p(omap_sdi_remove),
 	.driver         = {
 		.name   = "omapdss_sdi",
 		.owner  = THIS_MODULE,
+		.of_match_table = sdi_of_match,
 	},
 };
 

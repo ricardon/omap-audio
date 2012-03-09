@@ -23,6 +23,7 @@
 #define DSS_SUBSYS_NAME "DSS"
 
 #include <linux/kernel.h>
+#include <linux/module.h>
 #include <linux/io.h>
 #include <linux/export.h>
 #include <linux/err.h>
@@ -31,6 +32,8 @@
 #include <linux/clk.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
 
 #include <video/omapdss.h>
 
@@ -749,9 +752,21 @@ void dss_debug_dump_clocks(struct seq_file *s)
 /* DSS HW IP initialisation */
 static int __init omap_dsshw_probe(struct platform_device *pdev)
 {
+	struct device_node *node = pdev->dev.of_node;
+	struct device_node *child;
 	struct resource *dss_mem;
 	u32 rev;
 	int r;
+
+	DSSDBG("probe\n");
+
+	if (!node) {
+		DSSERR("NO DT DATA\n");
+		return -EINVAL;
+	}
+
+	for_each_child_of_node(node, child)
+		printk("child %s\n", child->name);
 
 	dss.pdev = pdev;
 
@@ -800,6 +815,10 @@ static int __init omap_dsshw_probe(struct platform_device *pdev)
 
 	dss_debugfs_create_file("dss", dss_dump_regs);
 
+	r = of_platform_populate(node, NULL, NULL, &pdev->dev);
+	if (r)
+		printk("OF populate FAILED %d\n", r);
+
 	return 0;
 
 err_runtime_get:
@@ -847,12 +866,24 @@ static const struct dev_pm_ops dss_pm_ops = {
 	.runtime_resume = dss_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id dss_of_match[] = {
+	{
+		.compatible = "ti,omap4-dss",
+	},
+	{},
+};
+#else
+#define dss_of_match NULL
+#endif
+
 static struct platform_driver omap_dsshw_driver = {
 	.remove         = __exit_p(omap_dsshw_remove),
 	.driver         = {
 		.name   = "omapdss_dss",
 		.owner  = THIS_MODULE,
 		.pm	= &dss_pm_ops,
+		.of_match_table = dss_of_match,
 	},
 };
 
