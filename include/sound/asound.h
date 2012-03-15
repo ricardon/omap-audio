@@ -70,6 +70,22 @@ struct snd_aes_iec958 {
 
 /****************************************************************************
  *                                                                          *
+ *        CEA-861 Audio InfoFrame. Used in HDMI and DisplayPort		    *
+ *                                                                          *
+ ****************************************************************************/
+
+struct snd_cea_861_aud_if {
+	unsigned char coding_type;
+	unsigned char channel_count;
+	unsigned char sample_freq;
+	unsigned char sample_size;
+	unsigned char channel_alloc;
+	unsigned char lsv; /* level shift values when downmixing */
+	bool st_downmix; /* allow (0) or inhibit (1) downmixed stereo */
+};
+
+/****************************************************************************
+ *                                                                          *
  *      Section for driver hardware dependent interface - /dev/snd/hw?      *
  *                                                                          *
  ****************************************************************************/
