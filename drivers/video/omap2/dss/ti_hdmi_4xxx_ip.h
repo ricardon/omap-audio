@@ -28,11 +28,6 @@
 #include <sound/asoundef.h>
 #endif
 #include "ti_hdmi.h"
-#if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
-	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
-#include <sound/soc.h>
-#include <sound/pcm_params.h>
-#endif
 
 /* HDMI Wrapper */
 
