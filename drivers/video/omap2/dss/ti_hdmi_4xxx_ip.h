@@ -23,6 +23,10 @@
 
 #include <linux/string.h>
 #include <video/omapdss.h>
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+#include <sound/asound.h>
+#include <sound/asoundef.h>
+#endif
 #include "ti_hdmi.h"
 #if defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI) || \
 	defined(CONFIG_SND_OMAP_SOC_OMAP4_HDMI_MODULE)
@@ -425,19 +429,6 @@ struct hdmi_core_infoframe_avi {
 	/* Pixel number start of right bar */
 	u16	db12_13_pixel_sofright;
 };
-/*
- * Refer to section 8.2 in HDMI 1.3 specification for
- * details about infoframe databytes
- */
-struct hdmi_core_infoframe_audio {
-	u8 db1_coding_type;
-	u8 db1_channel_count;
-	u8 db2_sample_freq;
-	u8 db2_sample_size;
-	u8 db4_channel_alloc;
-	bool db5_downmix_inh;
-	u8 db5_lsv;	/* Level shift values for downmix */
-};
 
 struct hdmi_core_packet_enable_repeat {
 	u32	audio_pkt;
@@ -518,7 +509,7 @@ struct hdmi_core_audio_config {
 int hdmi_config_audio_acr(struct hdmi_ip_data *ip_data,
 				u32 sample_freq, u32 *n, u32 *cts);
 void hdmi_core_audio_infoframe_config(struct hdmi_ip_data *ip_data,
-		struct hdmi_core_infoframe_audio *info_aud);
+		struct snd_cea_861_aud_if *info_aud);
 void hdmi_core_audio_config(struct hdmi_ip_data *ip_data,
 					struct hdmi_core_audio_config *cfg);
 void hdmi_wp_audio_config_dma(struct hdmi_ip_data *ip_data,

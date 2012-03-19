@@ -29,7 +29,6 @@
 #include <linux/string.h>
 #include <linux/seq_file.h>
 #include <linux/gpio.h>
-
 #include "ti_hdmi_4xxx_ip.h"
 #include "dss.h"
 
@@ -1156,7 +1155,7 @@ void hdmi_core_audio_config(struct hdmi_ip_data *ip_data,
 }
 
 void hdmi_core_audio_infoframe_config(struct hdmi_ip_data *ip_data,
-		struct hdmi_core_infoframe_audio *info_aud)
+		struct snd_cea_861_aud_if *info_aud)
 {
 	u8 val;
 	u8 sum = 0, checksum = 0;
@@ -1172,22 +1171,24 @@ void hdmi_core_audio_infoframe_config(struct hdmi_ip_data *ip_data,
 	hdmi_write_reg(av_base, HDMI_CORE_AV_AUDIO_LEN, 0x0a);
 	sum += 0x84 + 0x001 + 0x00a;
 
-	val = (info_aud->db1_coding_type << 4)
-			| (info_aud->db1_channel_count - 1);
+	val = (info_aud->coding_type << CEA861_AUDIO_INFOFRAME_DB1CT_SHIFT)
+			| (info_aud->channel_count - 1);
 	hdmi_write_reg(av_base, HDMI_CORE_AV_AUD_DBYTE(0), val);
 	sum += val;
 
-	val = (info_aud->db2_sample_freq << 2) | info_aud->db2_sample_size;
+	val = (info_aud->sample_freq << CEA861_AUDIO_INFOFRAME_DB2SF_SHIFT)
+			| (info_aud->sample_size);
 	hdmi_write_reg(av_base, HDMI_CORE_AV_AUD_DBYTE(1), val);
 	sum += val;
 
 	hdmi_write_reg(av_base, HDMI_CORE_AV_AUD_DBYTE(2), 0x00);
 
-	val = info_aud->db4_channel_alloc;
+	val = info_aud->channel_alloc;
 	hdmi_write_reg(av_base, HDMI_CORE_AV_AUD_DBYTE(3), val);
 	sum += val;
 
-	val = (info_aud->db5_downmix_inh << 7) | (info_aud->db5_lsv << 3);
+	val = (info_aud->st_downmix << CEA861_AUDIO_INFOFRAME_DB5_DM_INH_SHIFT)
+		| (info_aud->lsv << CEA861_AUDIO_INFOFRAME_DB5_LSV_SHIFT);
 	hdmi_write_reg(av_base, HDMI_CORE_AV_AUD_DBYTE(4), val);
 	sum += val;
 
