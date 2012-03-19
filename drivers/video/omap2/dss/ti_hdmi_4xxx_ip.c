@@ -1119,12 +1119,37 @@ void hdmi_core_audio_config(struct hdmi_ip_data *ip_data,
 	REG_FLD_MOD(av_base, HDMI_CORE_AV_SPDIF_CTRL,
 						cfg->fs_override, 1, 1);
 
-	/* I2S parameters */
-	REG_FLD_MOD(av_base, HDMI_CORE_AV_I2S_CHST4,
-						cfg->freq_sample, 3, 0);
+	/* I2S and IEC60958 parameters */
+
+	r = hdmi_read_reg(av_base, HDMI_CORE_AV_I2S_CHST0);
+	r = FLD_MOD(r, cfg->iec60958_cfg.professional, 0, 0);
+	r = FLD_MOD(r, cfg->iec60958_cfg.for_lpcm_aud, 1, 1);
+	r = FLD_MOD(r, cfg->iec60958_cfg.copyright, 2, 2);
+	r = FLD_MOD(r, cfg->iec60958_cfg.emphasis, 5, 3);
+	r = FLD_MOD(r, cfg->iec60958_cfg.mode, 7, 6);
+	hdmi_write_reg(av_base, HDMI_CORE_AV_I2S_CHST0, r);
+
+	hdmi_write_reg(av_base, HDMI_CORE_AV_I2S_CHST1,
+						cfg->iec60958_cfg.category);
+
+	r = hdmi_read_reg(av_base, HDMI_CORE_AV_I2S_CHST2);
+	r = FLD_MOD(r, cfg->iec60958_cfg.source_nr, 3, 0);
+	r = FLD_MOD(r, cfg->iec60958_cfg.channel_nr, 7, 4);
+	hdmi_write_reg(av_base, HDMI_CORE_AV_I2S_CHST2, r);
+
+	r = hdmi_read_reg(av_base, HDMI_CORE_AV_I2S_CHST4);
+	r = FLD_MOD(r, cfg->iec60958_cfg.freq_sample, 3, 0);
+	r = FLD_MOD(r, cfg->iec60958_cfg.clock_accuracy, 7, 4);
+	hdmi_write_reg(av_base, HDMI_CORE_AV_I2S_CHST4, r);
+
+	r = hdmi_read_reg(av_base, HDMI_CORE_AV_I2S_CHST5);
+	r = FLD_MOD(r, cfg->iec60958_cfg.freq_sample, 7, 4);
+	r = FLD_MOD(r, cfg->iec60958_cfg.word_length, 3, 1);
+	r = FLD_MOD(r, cfg->iec60958_cfg.word_max_length, 0, 0);
+	hdmi_write_reg(av_base, HDMI_CORE_AV_I2S_CHST5, r);
 
 	r = hdmi_read_reg(av_base, HDMI_CORE_AV_I2S_IN_CTRL);
-	r = FLD_MOD(r, cfg->i2s_cfg.en_high_bitrate_aud, 7, 7);
+	r = FLD_MOD(r, cfg->en_high_bitrate_aud, 7, 7);
 	r = FLD_MOD(r, cfg->i2s_cfg.sck_edge_mode, 6, 6);
 	r = FLD_MOD(r, cfg->i2s_cfg.cbit_order, 5, 5);
 	r = FLD_MOD(r, cfg->i2s_cfg.vbit, 4, 4);
@@ -1133,12 +1158,6 @@ void hdmi_core_audio_config(struct hdmi_ip_data *ip_data,
 	r = FLD_MOD(r, cfg->i2s_cfg.direction, 1, 1);
 	r = FLD_MOD(r, cfg->i2s_cfg.shift, 0, 0);
 	hdmi_write_reg(av_base, HDMI_CORE_AV_I2S_IN_CTRL, r);
-
-	r = hdmi_read_reg(av_base, HDMI_CORE_AV_I2S_CHST5);
-	r = FLD_MOD(r, cfg->freq_sample, 7, 4);
-	r = FLD_MOD(r, cfg->i2s_cfg.word_length, 3, 1);
-	r = FLD_MOD(r, cfg->i2s_cfg.word_max_length, 0, 0);
-	hdmi_write_reg(av_base, HDMI_CORE_AV_I2S_CHST5, r);
 
 	REG_FLD_MOD(av_base, HDMI_CORE_AV_I2S_IN_LEN,
 			cfg->i2s_cfg.in_length_bits, 3, 0);
