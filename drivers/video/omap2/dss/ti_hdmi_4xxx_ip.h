@@ -412,8 +412,6 @@ struct hdmi_audio_dma {
 };
 
 struct hdmi_core_audio_i2s_config {
-	u8 word_max_length;
-	u8 word_length;
 	u8 in_length_bits;
 	u8 justification;
 	u8 sck_edge_mode;
@@ -425,7 +423,7 @@ struct hdmi_core_audio_i2s_config {
 
 struct hdmi_core_audio_config {
 	struct hdmi_core_audio_i2s_config	i2s_cfg;
-	u32					freq_sample;
+	struct snd_aes_iec958			*iec60958_cfg;
 	bool					fs_override;
 	u32					n;
 	u32					cts;
