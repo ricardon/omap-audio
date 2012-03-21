@@ -22,6 +22,8 @@
 #define _TI_HDMI_H
 
 struct hdmi_ip_data;
+struct snd_aes_iec958;
+struct snd_cea_861_aud_if;
 
 enum hdmi_pll_pwr {
 	HDMI_PLLPWRCMD_ALLOFF = 0,
@@ -116,6 +118,9 @@ struct ti_hdmi_ip_ops {
 	int (*audio_start)(struct hdmi_ip_data *ip_data);
 
 	void (*audio_stop)(struct hdmi_ip_data *ip_data);
+
+	int (*audio_config)(struct hdmi_ip_data *ip_data,
+		struct snd_aes_iec958 *iec, struct snd_cea_861_aud_if *aud_if);
 #endif
 
 };
@@ -195,5 +200,7 @@ int ti_hdmi_4xxx_wp_audio_enable(struct hdmi_ip_data *ip_data);
 void ti_hdmi_4xxx_wp_audio_disable(struct hdmi_ip_data *ip_data);
 int ti_hdmi_4xxx_audio_start(struct hdmi_ip_data *ip_data);
 void ti_hdmi_4xxx_audio_stop(struct hdmi_ip_data *ip_data);
+int ti_hdmi_4xxx_audio_config(struct hdmi_ip_data *ip_data,
+		struct snd_aes_iec958 *iec, struct snd_cea_861_aud_if *aud_if);
 #endif
 #endif
