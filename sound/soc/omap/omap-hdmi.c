@@ -161,21 +161,23 @@ static int omap_hdmi_dai_hw_params(struct snd_pcm_substream *substream,
 		err = -EINVAL;
 	}
 
-	/* Fill the CEA 861 audio infoframe */
-	/*
+	/* Fill the CEA 861 audio infoframe. Refer to the specification
+	 * for details.
 	 * The OMAP HDMI IP requires to use the 8-channel channel code when
-	 * using transmitting more than two channels.
+	 * transmitting more than two channels.
 	 */
 	if (params_channels(params) == 2)
-		cea.channel_alloc = 0x0;
+		cea.db4_ca = 0x0;
 	else
-		cea.channel_alloc = 0x13;
-	cea.coding_type = CEA861_AUDIO_INFOFRAME_DB1CT_FROM_STREAM;
-	cea.channel_count = params_channels(params) - 1;
-	cea.sample_freq = CEA861_AUDIO_INFOFRAME_DB2SF_FROM_STREAM;
-	cea.sample_size = CEA861_AUDIO_INFOFRAME_DB2SS_FROM_STREAM;
-	cea.lsv = 0; /* level shift values when downmixing */
-	cea.st_downmix = true; /* allow (0) or inhibit (1) downmixed stereo */
+		cea.db4_ca = 0x13;
+	cea.db1_ct_cc = (params_channels(params) - 1)
+		& CEA861_AUDIO_INFOFRAME_DB1CC;
+	cea.db1_ct_cc |= CEA861_AUDIO_INFOFRAME_DB1CT_FROM_STREAM;
+	cea.db2_sf_ss = CEA861_AUDIO_INFOFRAME_DB2SF_FROM_STREAM;
+	cea.db2_sf_ss |= CEA861_AUDIO_INFOFRAME_DB2SS_FROM_STREAM;
+	cea.db3 = 0; /* not used, all zeros */
+	cea.db5_dminh_lsv = CEA861_AUDIO_INFOFRAME_DB5_DM_INH_PROHIBITED;
+	cea.db5_dminh_lsv |= (0 & CEA861_AUDIO_INFOFRAME_DB5_LSV);
 
 	err = hdmi.dssdev->driver->audio_config(hdmi.dssdev, &iec, &cea);
 
@@ -227,7 +229,7 @@ static const struct snd_soc_dai_ops omap_hdmi_dai_ops = {
 static struct snd_soc_dai_driver omap_hdmi_dai = {
 	.playback = {
 		.channels_min = 2,
-		.channels_max = 2,
+		.channels_max = 8,
 		.rates = OMAP_HDMI_RATES,
 		.formats = OMAP_HDMI_FORMATS,
 	},
