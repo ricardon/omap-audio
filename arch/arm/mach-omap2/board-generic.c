@@ -44,6 +44,17 @@ static void __init omap_generic_init(void)
 	of_platform_populate(NULL, omap_dt_match_table, NULL, NULL);
 }
 
+#ifdef CONFIG_SOC_OMAP5
+extern void omap_5430evm_init(void);
+
+static void __init omap5_generic_init(void)
+{
+	omap_generic_init();
+	omap_5430evm_init();
+
+}
+#endif
+
 #ifdef CONFIG_SOC_OMAP2420
 static const char *omap242x_boards_compat[] __initdata = {
 	"ti,omap2420",
@@ -133,7 +144,7 @@ DT_MACHINE_START(OMAP5_DT, "Generic OMAP5 (Flattened Device Tree)")
 	.init_early	= omap5_init_early,
 	.init_irq	= omap_gic_of_init,
 	.handle_irq	= gic_handle_irq,
-	.init_machine	= omap_generic_init,
+	.init_machine	= omap5_generic_init,
 	.timer		= &omap5_timer,
 	.dt_compat	= omap5_boards_compat,
 	.restart	= omap_prcm_restart,
