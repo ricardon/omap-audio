@@ -61,6 +61,13 @@ config ARCH_OMAP4
 	select USB_ARCH_HAS_EHCI if USB_SUPPORT
 	select ARM_CPU_SUSPEND if PM
 
+config SOC_OMAP5
+	bool "TI OMAP5"
+	select SOC_HAS_OMAP_DPLL
+	select CPU_V7
+	select ARM_GIC
+	select HAVE_SMP
+
 comment "OMAP Core Type"
 	depends on ARCH_OMAP2
 
