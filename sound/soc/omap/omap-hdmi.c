@@ -75,6 +75,10 @@ static int omap_hdmi_dai_hw_params(struct snd_pcm_substream *substream,
 	int err = 0;
 	struct snd_aes_iec958 iec;
 	struct snd_cea_861_aud_if cea;
+	struct omap_dss_audio audio;
+
+	audio.iec = &iec;
+	audio.cea = &cea;
 
 	switch (params_format(params)) {
 	case SNDRV_PCM_FORMAT_S16_LE:
@@ -182,7 +186,7 @@ static int omap_hdmi_dai_hw_params(struct snd_pcm_substream *substream,
 	cea.db5_dminh_lsv = CEA861_AUDIO_INFOFRAME_DB5_DM_INH_PROHIBITED;
 	cea.db5_dminh_lsv |= (0 & CEA861_AUDIO_INFOFRAME_DB5_LSV);
 
-	err = hdmi.dssdev->driver->audio_config(hdmi.dssdev, &iec, &cea);
+	err = hdmi.dssdev->driver->audio_config(hdmi.dssdev, &audio);
 
 	return err;
 }
@@ -232,7 +236,7 @@ static const struct snd_soc_dai_ops omap_hdmi_dai_ops = {
 static struct snd_soc_dai_driver omap_hdmi_dai = {
 	.playback = {
 		.channels_min = 2,
-		.channels_max = 2,
+		.channels_max = 8,
 		.rates = OMAP_HDMI_RATES,
 		.formats = OMAP_HDMI_FORMATS,
 	},
