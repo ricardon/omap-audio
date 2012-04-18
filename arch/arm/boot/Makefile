@@ -55,6 +55,8 @@ $(obj)/zImage:	$(obj)/compressed/vmlinux FORCE
 	$(call if_changed,objcopy)
 	@echo '  Kernel: $@ is ready'
 
+$(obj)/zImage-dtb.%: $(obj)/%.dtb $(obj)/zImage
+	cat $(obj)/zImage $< > $@
 endif
 
 targets += $(dtb-y)
@@ -86,6 +88,11 @@ if [ $(words $(UIMAGE_LOADADDR)) -gt 1 ]; then \
 fi
 
 $(obj)/uImage:	$(obj)/zImage FORCE
+	@$(check_for_multiple_loadaddr)
+	$(call if_changed,uimage)
+	@echo '  Image $@ is ready'
+
+$(obj)/uImage-dtb.%:  $(obj)/zImage-dtb.% FORCE
 	@$(check_for_multiple_loadaddr)
 	$(call if_changed,uimage)
 	@echo '  Image $@ is ready'
