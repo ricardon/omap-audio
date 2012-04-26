@@ -166,7 +166,7 @@
 		450000000  1   2  3  4  5
 	>;
 
-	taal {
+	lcd1 {
 		compatible = "ti,taal";
 
 		bus-speed = <216000000>;
@@ -180,13 +180,39 @@
 			5       /* data2 - */
 		>;
 
-		dsi-lp-clk-div = <10>;
-
-		/* taal stuff */
-		name = "taal";
+		panel_type = "taal";
 		reset-gpio = <102>;
 		/* use-ext-te; */
 		/* ext-te-gpio = <101>; */
+		esd-interval = <0>;
+	};
+};
+
+&dsi2 {
+	clk-sets = <
+		/* ddrclk regn regm regn-dispc regn-dsi lp-div */
+		216000000 16 180  5  5 10
+		450000000  1   2  3  4  5
+	>;
+
+	lcd2 {
+		compatible = "ti,taal";
+
+		bus-speed = <216000000>;
+
+		lanes = <
+			0       /* clk + */
+			1       /* clk - */
+			2       /* data1 + */
+			3       /* data1 - */
+			4       /* data2 + */
+			5       /* data2 - */
+		>;
+
+		panel_type = "taal";
+		reset-gpio = <104>;
+		/* use-ext-te; */
+		/* ext-te-gpio = <103>; */
 		esd-interval = <0>;
 	};
 };

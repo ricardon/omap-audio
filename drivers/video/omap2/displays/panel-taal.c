@@ -886,7 +886,7 @@ static int taal_probe(struct omap_dss_device *dssdev)
 
 		printk("reading props\n");
 
-		r = of_property_read_string(node, "name", &s);
+		r = of_property_read_string(node, "panel_type", &s);
 		td->panel_data.name = r ? NULL : s;
 
 		r = of_property_read_u32(node, "reset-gpio", &v);
