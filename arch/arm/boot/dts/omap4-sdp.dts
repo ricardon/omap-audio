@@ -163,17 +163,19 @@
 	taal {
 		compatible = "ti,taal";
 
-		clk-lane = <1>;
-		clk-pol = <0>;
-		data1-lane = <2>;
-		data1-pol = <0>;
-		data2-lane = <3>;
-		data2-pol = <0>;
 
 		dsi-regn = <16>;
 		dsi-regm = <180>;
 		dsi-regm-dispc = <5>;
 		dsi-reg-dsi = <5>;
+		lanes = <
+			0       /* clk + */
+			1       /* clk - */
+			2       /* data1 + */
+			3       /* data1 - */
+			4       /* data2 + */
+			5       /* data2 - */
+		>;
 
 		dsi-lp-clk-div = <10>;
 

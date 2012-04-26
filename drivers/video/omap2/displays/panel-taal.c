@@ -876,19 +876,13 @@ static int taal_probe(struct omap_dss_device *dssdev)
 		goto err;
 	}
 
-
-#if 0
-	name = "taal";
-	reset-gpio = <102>;
-	/* use-ext-te */;
-	/* ext-te-gpio = <101>; */
-	esd-interval = <0>
-#endif
-
-
 	if (node) {
 		u32 v;
 		const char *s;
+		u32 lane_arr[6];
+		int len;
+		struct property *prop;
+		struct omap_dsi_pin_config pin_cfg;
 
 		printk("reading props\n");
 
@@ -900,6 +894,23 @@ static int taal_probe(struct omap_dss_device *dssdev)
 
 		r = of_property_read_u32(node, "esd-interval", &v);
 		td->panel_data.esd_interval = r ? 0 : v;
+
+		prop = of_find_property(node, "lanes", &len);
+		if (prop == NULL)
+			printk("FAILED to find lanes\n");
+
+		if (len != 6 * sizeof(u32))
+			printk("bad number of lanes: %d\n", len);
+
+		r = of_property_read_u32_array(node, "lanes", lane_arr, 6);
+		if (r)
+			printk("FAILED to read lanes: %d\n", r);
+
+		pin_cfg.num_pins = 6;
+		for (i = 0; i < 6; ++i)
+			pin_cfg.pins[i] = (int)lane_arr[i];
+
+		td->panel_data.pin_config = pin_cfg;
 
 	} else if (dssdev->data) {
 		struct nokia_dsi_panel_data *pdata = dssdev->data;
