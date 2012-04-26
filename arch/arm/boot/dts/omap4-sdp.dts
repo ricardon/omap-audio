@@ -160,14 +160,17 @@
 };
 
 &dsi1 {
+	clk-sets = <
+		/* ddrclk regn regm regn-dispc regn-dsi lp-div */
+		216000000 16 180  5  5 10
+		450000000  1   2  3  4  5
+	>;
+
 	taal {
 		compatible = "ti,taal";
 
+		bus-speed = <216000000>;
 
-		dsi-regn = <16>;
-		dsi-regm = <180>;
-		dsi-regm-dispc = <5>;
-		dsi-reg-dsi = <5>;
 		lanes = <
 			0       /* clk + */
 			1       /* clk - */

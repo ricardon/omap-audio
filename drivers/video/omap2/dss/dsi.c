@@ -4819,6 +4819,75 @@ static void __init dsi_probe_pdata(struct platform_device *dsidev)
 	}
 }
 
+struct dsi_clk_set
+{
+	u32 ddr_clk;
+	u32 regn;
+	u32 regm;
+	u32 regn_dispc;
+	u32 regn_dsi;
+	u32 lp_div;
+};
+
+static int __init dsi_probe_of_1(struct platform_device *pdev)
+{
+	struct dsi_data *dsi = dsi_get_dsidrv_data(pdev);
+	struct device_node *node = pdev->dev.of_node;
+	u32 id;
+	int len, num_sets;
+	struct property *prop;
+	int i;
+	struct dsi_clk_set *sets;
+	int r;
+
+	r = of_property_read_u32(node, "id", &id);
+	if (r) {
+		printk("failed to read DSI ID\n");
+		return r;
+	}
+
+	dsi->module_id = id;
+
+	prop = of_find_property(node, "clk-sets", &len);
+	if (prop == NULL) {
+		printk("FAILED to find clk sets\n");
+		return -EINVAL;
+	}
+
+	if (len % (6 * sizeof(u32)) != 0) {
+		printk("bad number of cells in clk-sets: %d\n", len);
+		return -EINVAL;
+	}
+
+	num_sets = len / (6 * sizeof(u32));
+
+	sets = devm_kzalloc(&pdev->dev, sizeof(struct dsi_clk_set) * num_sets,
+			GFP_KERNEL);
+	if (sets == NULL)
+		return -ENOMEM;
+
+	const __be32 *val = prop->value;
+
+	for (i = 0; i < num_sets; ++i) {
+		sets[i].ddr_clk = be32_to_cpup(val++);
+		sets[i].regn = be32_to_cpup(val++);
+		sets[i].regm = be32_to_cpup(val++);
+		sets[i].regn_dispc = be32_to_cpup(val++);
+		sets[i].regn_dsi = be32_to_cpup(val++);
+		sets[i].lp_div = be32_to_cpup(val++);
+
+		printk("SET: %u, %u, %u, %u, %u, %u\n",
+				sets[i].ddr_clk,
+				sets[i].regn,
+				sets[i].regm,
+				sets[i].regn_dispc,
+				sets[i].regn_dsi,
+				sets[i].lp_div);
+	}
+
+	return 0;
+}
+
 static void __init dsi_probe_of(struct platform_device *pdev)
 {
 	struct device_node *node = pdev->dev.of_node;
@@ -4827,17 +4896,8 @@ static void __init dsi_probe_of(struct platform_device *pdev)
 
 	for_each_child_of_node(node, child) {
 		struct omap_dss_device *dssdev;
-		u32 datalines, channel;
 
 		printk("dsi child %s\n", child->name);
-
-		r = of_property_read_u32(child, "data-lines", &datalines);
-		if (r)
-			printk("datalines fail\n");
-
-		r = of_property_read_u32(child, "channel", &channel);
-		if (r)
-			printk("channel fail\n");
 
 		dssdev = kzalloc(sizeof(*dssdev), GFP_KERNEL);
 
@@ -4846,13 +4906,6 @@ static void __init dsi_probe_of(struct platform_device *pdev)
 		dssdev->type = OMAP_DISPLAY_TYPE_DSI;
 		dssdev->name = child->name;
 		dssdev->channel = OMAP_DSS_CHANNEL_LCD;
-
-		dssdev->phy.dsi.clk_lane = 1;
-		dssdev->phy.dsi.clk_pol = 0;
-		dssdev->phy.dsi.data1_lane = 2;
-		dssdev->phy.dsi.data1_pol = 0;
-		dssdev->phy.dsi.data2_lane = 3;
-		dssdev->phy.dsi.data2_pol = 0;
 
 		dssdev->clocks.dispc.channel.lck_div = 1;
 		dssdev->clocks.dispc.channel.pck_div = 5;
@@ -4895,22 +4948,18 @@ static int __init omap_dsihw_probe(struct platform_device *dsidev)
 	if (!dsi)
 		return -ENOMEM;
 
-	if (dsidev->dev.of_node) {
-		u32 id;
-		r = of_property_read_u32(dsidev->dev.of_node, "id", &id);
-		if (r) {
-			printk("failed to read DSI ID\n");
-			return r;
-		}
+	dsi->pdev = dsidev;
+	dev_set_drvdata(&dsidev->dev, dsi);
 
-		dsi->module_id = id;
+	if (dsidev->dev.of_node) {
+		r = dsi_probe_of_1(dsidev);
+		if (r)
+			return r;
 	} else {
 		dsi->module_id = dsidev->id;
 	}
 
-	dsi->pdev = dsidev;
 	dsi_pdev_map[dsi->module_id] = dsidev;
-	dev_set_drvdata(&dsidev->dev, dsi);
 
 	spin_lock_init(&dsi->irq_lock);
 	spin_lock_init(&dsi->errors_lock);
