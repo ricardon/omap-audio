@@ -752,6 +752,57 @@ static void __init hdmi_probe_pdata(struct platform_device *pdev)
 	}
 }
 
+static void __init hdmi_probe_of(struct platform_device *pdev)
+{
+	struct device_node *node = pdev->dev.of_node;
+	struct device_node *child;
+	int r;
+	u32 v;
+
+	r = of_property_read_u32(child, "ct-cp-hpd-gpio", &v);
+	if (r)
+		printk("ct-cp-hpd-gpio fail\n");
+
+	hdmi.ct_cp_hpd_gpio = v;
+
+	r = of_property_read_u32(child, "ls-oe-gpio", &v);
+	if (r)
+		printk("ls-oe-gpio fail\n");
+
+	hdmi.ls_oe_gpio = v;
+
+	r = of_property_read_u32(child, "hpd-gpio", &v);
+	if (r)
+		printk("hpd-gpio fail\n");
+
+	hdmi.hpd_gpio = v;
+
+	for_each_child_of_node(node, child) {
+		struct omap_dss_device *dssdev;
+
+		printk("hdmi child %s\n", child->name);
+
+		dssdev = kzalloc(sizeof(*dssdev), GFP_KERNEL);
+
+		dssdev->dev.of_node = child;
+
+		dssdev->type = OMAP_DISPLAY_TYPE_HDMI;
+		dssdev->name = child->name;
+		dssdev->channel = OMAP_DSS_CHANNEL_DIGIT;
+
+		r = hdmi_init_display(dssdev);
+		if (r) {
+			DSSERR("device %s init failed: %d\n", dssdev->name, r);
+			continue;
+		}
+
+		r = omap_dss_register_device(dssdev, &pdev->dev);
+		if (r)
+			DSSERR("device %s register failed: %d\n",
+					dssdev->name, r);
+	}
+}
+
 /* HDMI HW IP initialisation */
 static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 {
@@ -793,7 +844,10 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 
 	dss_debugfs_create_file("hdmi", hdmi_dump_regs);
 
-	hdmi_probe_pdata(pdev);
+	if (pdev->dev.of_node)
+		hdmi_probe_of(pdev);
+	else if (pdev->dev.platform_data)
+		hdmi_probe_pdata(pdev);
 
 	return 0;
 }

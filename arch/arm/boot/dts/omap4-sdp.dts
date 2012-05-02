@@ -216,3 +216,12 @@
 		esd-interval = <0>;
 	};
 };
+
+&hdmi {
+	ct-cp-hpd-gpio = <60>;
+	ls-oe-gpio = <41>;
+	hpd-gpio = <63>;
+
+	hdmi {
+	};
+};

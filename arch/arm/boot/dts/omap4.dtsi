@@ -135,7 +135,7 @@
 				vdds_dsi-supply = <&vcxio>;
 			};
 
-			hdmi {
+			hdmi: hdmi {
 				compatible = "ti,omap4-hdmi";
 				ti,hwmods = "dss_hdmi";
 			};
