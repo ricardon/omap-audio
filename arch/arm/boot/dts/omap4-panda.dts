@@ -101,3 +101,11 @@
 	};
 };
 
+&hdmi {
+	hdmi {
+		compatible = "ti,tfp410";
+		ct_cp_hpd_gpio = <60>;
+		ls_oe_gpio = <41>;
+		hpd_gpio = <63>;
+	};
+};

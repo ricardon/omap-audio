@@ -138,9 +138,6 @@
 			hdmi {
 				compatible = "ti,omap4-hdmi";
 				ti,hwmods = "dss_hdmi";
-
-				hpd_gpio = <0>;
-				ls_oe = <0>;
 			};
 
 			rfbi: rfbi {
