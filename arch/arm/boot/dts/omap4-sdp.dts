@@ -223,5 +223,6 @@
 	hpd-gpio = <63>;
 
 	hdmi {
+		compatible = "ti,hdmi_panel";
 	};
 };

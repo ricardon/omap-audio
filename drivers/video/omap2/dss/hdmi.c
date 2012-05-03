@@ -33,6 +33,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/clk.h>
 #include <linux/gpio.h>
+#include <linux/slab.h>
 #include <video/omapdss.h>
 
 #include "ti_hdmi.h"
@@ -759,19 +760,19 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 	int r;
 	u32 v;
 
-	r = of_property_read_u32(child, "ct-cp-hpd-gpio", &v);
+	r = of_property_read_u32(node, "ct-cp-hpd-gpio", &v);
 	if (r)
 		printk("ct-cp-hpd-gpio fail\n");
 
 	hdmi.ct_cp_hpd_gpio = v;
 
-	r = of_property_read_u32(child, "ls-oe-gpio", &v);
+	r = of_property_read_u32(node, "ls-oe-gpio", &v);
 	if (r)
 		printk("ls-oe-gpio fail\n");
 
 	hdmi.ls_oe_gpio = v;
 
-	r = of_property_read_u32(child, "hpd-gpio", &v);
+	r = of_property_read_u32(node, "hpd-gpio", &v);
 	if (r)
 		printk("hpd-gpio fail\n");
 
