@@ -158,7 +158,7 @@
 #define TWL6040_VIBROCDET		0x20
 #define TWL6040_TSHUTDET                0x40
 
-#define TWL6040_CELLS			2
+#define TWL6040_CELLS			3
 
 #define TWL6040_REV_ES1_0		0x00
 #define TWL6040_REV_ES1_1		0x01
@@ -174,6 +174,8 @@
 /* PLL selection */
 #define TWL6040_SYSCLK_SEL_LPPLL	0
 #define TWL6040_SYSCLK_SEL_HPPLL	1
+
+#define TWL6040_GPO_MAX	3
 
 struct twl6040_codec_data {
 	u16 hs_left_step;
@@ -191,12 +193,18 @@ struct twl6040_vibra_data {
 	int vddvibr_uV;			/* VDDVIBR volt, set 0 for fixed reg */
 };
 
+struct twl6040_gpo_data {
+	int nr_gpo;
+	int gpio_base;
+};
+
 struct twl6040_platform_data {
 	int audpwron_gpio;	/* audio power-on gpio */
 	unsigned int irq_base;
 
 	struct twl6040_codec_data *codec;
 	struct twl6040_vibra_data *vibra;
+	struct twl6040_gpo_data *gpo;
 };
 
 struct regmap;
