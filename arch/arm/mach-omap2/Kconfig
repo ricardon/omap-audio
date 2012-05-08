@@ -28,9 +28,13 @@ config ARCH_OMAP2
 	select CPU_V6
 	select MULTI_IRQ_HANDLER
 
+config SOC_HAS_OMAP_DPLL
+	bool
+
 config ARCH_OMAP3
 	bool "TI OMAP3"
 	depends on ARCH_OMAP2PLUS
+	select SOC_HAS_OMAP_DPLL
 	default y
 	select CPU_V7
 	select USB_ARCH_HAS_EHCI if USB_SUPPORT
@@ -43,6 +47,7 @@ config ARCH_OMAP4
 	bool "TI OMAP4"
 	default y
 	depends on ARCH_OMAP2PLUS
+	select SOC_HAS_OMAP_DPLL
 	select CACHE_L2X0
 	select CPU_V7
 	select ARM_GIC
