@@ -166,7 +166,7 @@
 		450000000  1   2  3  4  5
 	>;
 
-	lcd1 {
+	lcd {
 		compatible = "ti,taal";
 
 		bus-speed = <216000000>;
