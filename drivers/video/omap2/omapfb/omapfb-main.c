@@ -2391,6 +2391,8 @@ static int __init omapfb_probe(struct platform_device *pdev)
 	ovl = omap_dss_get_overlay(0);
 	if (ovl->manager && ovl->manager->device) {
 		def_display = ovl->manager->device;
+		dev_info(&pdev->dev, "using %s as default display\n",
+				def_display->name);
 	} else {
 		dev_warn(&pdev->dev, "cannot find default display\n");
 		def_display = NULL;
