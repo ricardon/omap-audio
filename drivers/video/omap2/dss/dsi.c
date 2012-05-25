@@ -253,6 +253,16 @@ struct dsi_isr_tables {
 	struct dsi_isr_data isr_table_cio[DSI_MAX_NR_ISRS];
 };
 
+struct dsi_clk_set
+{
+	u32 ddr_clk;
+	u32 regn;
+	u32 regm;
+	u32 regn_dispc;
+	u32 regn_dsi;
+	u32 lp_div;
+};
+
 struct dsi_data {
 	struct platform_device *pdev;
 	void __iomem	*base;
@@ -332,6 +342,9 @@ struct dsi_data {
 	unsigned num_lanes_used;
 
 	unsigned scp_clk_refcount;
+
+	int num_clk_sets;
+	struct dsi_clk_set *clk_sets;
 };
 
 struct dsi_packet_sent_handler_data {
@@ -4102,6 +4115,36 @@ int omapdss_dsi_configure_pins(struct omap_dss_device *dssdev,
 }
 EXPORT_SYMBOL(omapdss_dsi_configure_pins);
 
+int omapdss_dsi_set_bus_speed(struct omap_dss_device *dssdev,
+		unsigned long bus_speed)
+{
+	struct platform_device *dsidev = dsi_get_dsidev_from_dssdev(dssdev);
+	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
+	const struct dsi_clk_set *set;
+
+	set = &dsi->clk_sets[0];
+
+	dssdev->clocks.dispc.channel.lck_div = 1;
+	dssdev->clocks.dispc.channel.pck_div = 5;
+	dssdev->clocks.dispc.channel.lcd_clk_src =
+		OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC;
+
+	dssdev->clocks.dsi.regn = set->regn;
+	dssdev->clocks.dsi.regm = set->regm;
+	dssdev->clocks.dsi.regm_dispc = set->regn_dispc;
+	dssdev->clocks.dsi.regm_dsi = set->regn_dsi;
+
+	dssdev->clocks.dsi.lp_clk_div = set->lp_div;
+
+	if (dsi->module_id == 0)
+		dssdev->clocks.dsi.dsi_fclk_src = OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DSI;
+	else
+		dssdev->clocks.dsi.dsi_fclk_src = OMAP_DSS_CLK_SRC_DSI2_PLL_HSDIV_DSI;
+
+	return 0;
+}
+EXPORT_SYMBOL(omapdss_dsi_set_bus_speed);
+
 int dsi_enable_video_output(struct omap_dss_device *dssdev, int channel)
 {
 	struct platform_device *dsidev = dsi_get_dsidev_from_dssdev(dssdev);
@@ -4819,16 +4862,6 @@ static void __init dsi_probe_pdata(struct platform_device *dsidev)
 	}
 }
 
-struct dsi_clk_set
-{
-	u32 ddr_clk;
-	u32 regn;
-	u32 regm;
-	u32 regn_dispc;
-	u32 regn_dsi;
-	u32 lp_div;
-};
-
 static int __init dsi_probe_of_1(struct platform_device *pdev)
 {
 	struct dsi_data *dsi = dsi_get_dsidrv_data(pdev);
@@ -4839,6 +4872,7 @@ static int __init dsi_probe_of_1(struct platform_device *pdev)
 	int i;
 	struct dsi_clk_set *sets;
 	int r;
+	const __be32 *val;
 
 	r = of_property_read_u32(node, "id", &id);
 	if (r) {
@@ -4866,7 +4900,7 @@ static int __init dsi_probe_of_1(struct platform_device *pdev)
 	if (sets == NULL)
 		return -ENOMEM;
 
-	const __be32 *val = prop->value;
+	val = prop->value;
 
 	for (i = 0; i < num_sets; ++i) {
 		sets[i].ddr_clk = be32_to_cpup(val++);
@@ -4884,6 +4918,9 @@ static int __init dsi_probe_of_1(struct platform_device *pdev)
 				sets[i].regn_dsi,
 				sets[i].lp_div);
 	}
+
+	dsi->num_clk_sets = num_sets;
+	dsi->clk_sets = sets;
 
 	return 0;
 }
@@ -4907,6 +4944,7 @@ static void __init dsi_probe_of(struct platform_device *pdev)
 		dssdev->name = child->name;
 		dssdev->channel = OMAP_DSS_CHANNEL_LCD;
 
+		/*
 		dssdev->clocks.dispc.channel.lck_div = 1;
 		dssdev->clocks.dispc.channel.pck_div = 5;
 		dssdev->clocks.dispc.channel.lcd_clk_src =
@@ -4919,6 +4957,7 @@ static void __init dsi_probe_of(struct platform_device *pdev)
 
 		dssdev->clocks.dsi.lp_clk_div = 10;
 		dssdev->clocks.dsi.dsi_fclk_src = OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DSI;
+		*/
 
 		r = dsi_init_display(dssdev);
 		if (r) {
@@ -5086,6 +5125,9 @@ static int __exit omap_dsihw_remove(struct platform_device *dsidev)
 		regulator_put(dsi->vdds_dsi_reg);
 		dsi->vdds_dsi_reg = NULL;
 	}
+
+	if (dsi->clk_sets != NULL)
+		kfree(dsi->clk_sets);
 
 	return 0;
 }

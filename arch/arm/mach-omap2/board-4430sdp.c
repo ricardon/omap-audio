@@ -611,6 +611,7 @@ static struct nokia_dsi_panel_data dsi1_panel = {
 			.num_pins	= 6,
 			.pins		= { 0, 1, 2, 3, 4, 5 },
 		},
+		.bus_speed	= 216000000,
 };
 
 static struct omap_dss_device sdp4430_lcd_device = {
@@ -657,6 +658,7 @@ static struct nokia_dsi_panel_data dsi2_panel = {
 			.num_pins	= 6,
 			.pins		= { 0, 1, 2, 3, 4, 5 },
 		},
+		.bus_speed	= 216000000,
 };
 
 static struct omap_dss_device sdp4430_lcd2_device = {

@@ -895,6 +895,11 @@ static int taal_probe(struct omap_dss_device *dssdev)
 		r = of_property_read_u32(node, "esd-interval", &v);
 		td->panel_data.esd_interval = r ? 0 : v;
 
+		r = of_property_read_u32(node, "bus-speed", &v);
+		if (r)
+			printk("BUS SPEED NOT DEFINED\n");
+		td->panel_data.bus_speed = v;
+
 		prop = of_find_property(node, "lanes", &len);
 		if (prop == NULL)
 			printk("FAILED to find lanes\n");
@@ -1115,6 +1120,12 @@ static int taal_power_on(struct omap_dss_device *dssdev)
 	r = omapdss_dsi_configure_pins(dssdev, &panel_data->pin_config);
 	if (r) {
 		dev_err(&dssdev->dev, "failed to configure DSI pins\n");
+		goto err0;
+	};
+
+	r = omapdss_dsi_set_bus_speed(dssdev, panel_data->bus_speed);
+	if (r) {
+		dev_err(&dssdev->dev, "failed to set DSI bus speed\n");
 		goto err0;
 	};
 

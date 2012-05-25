@@ -27,6 +27,8 @@ struct nokia_dsi_panel_data {
 	bool use_dsi_backlight;
 
 	struct omap_dsi_pin_config pin_config;
+
+	unsigned long bus_speed;
 };
 
 #endif /* __OMAP_NOKIA_DSI_PANEL_H */
