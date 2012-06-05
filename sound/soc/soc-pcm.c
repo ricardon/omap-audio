@@ -830,6 +830,9 @@ static struct snd_soc_pcm_runtime *dpcm_get_be(struct snd_soc_card *card,
 		for (i = 0; i < card->num_links; i++) {
 			be = &card->rtd[i];
 
+			if (!be->dai_link->no_pcm)
+				continue;
+
 			if (be->cpu_dai->playback_widget == widget ||
 				be->codec_dai->playback_widget == widget)
 				return be;
@@ -838,6 +841,9 @@ static struct snd_soc_pcm_runtime *dpcm_get_be(struct snd_soc_card *card,
 
 		for (i = 0; i < card->num_links; i++) {
 			be = &card->rtd[i];
+
+			if (!be->dai_link->no_pcm)
+				continue;
 
 			if (be->cpu_dai->capture_widget == widget ||
 				be->codec_dai->capture_widget == widget)
