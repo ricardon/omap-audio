@@ -102,10 +102,16 @@
 };
 
 &hdmi {
-	ct-cp-hpd-gpio = <60>;
-	ls-oe-gpio = <41>;
-	hpd-gpio = <63>;
+	tpd12s015 {
+		compatible = "ti,tpd12s015";
 
-	hdmi {
+		ct-cp-hpd-gpio = <60>;
+		ls-oe-gpio = <41>;
+		hpd-gpio = <63>;
+
+		hdmi-monitor {
+			compatible = "ti,hdmi_panel";
+		};
+
 	};
 };

@@ -753,12 +753,19 @@ static void __init hdmi_probe_pdata(struct platform_device *pdev)
 	}
 }
 
-static void __init hdmi_probe_of(struct platform_device *pdev)
+static int __init hdmi_probe_of(struct platform_device *pdev)
 {
 	struct device_node *node = pdev->dev.of_node;
 	struct device_node *child;
 	int r;
 	u32 v;
+
+	node = of_find_compatible_node(node, NULL, "ti,tpd12s015");
+
+	if (!node) {
+		DSSERR("TPD12S015 subnode not found.\n");
+		return -EINVAL;
+	}
 
 	r = of_property_read_u32(node, "ct-cp-hpd-gpio", &v);
 	if (r)
@@ -802,6 +809,8 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 			DSSERR("device %s register failed: %d\n",
 					dssdev->name, r);
 	}
+
+	return 0;
 }
 
 /* HDMI HW IP initialisation */
@@ -845,10 +854,15 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 
 	dss_debugfs_create_file("hdmi", hdmi_dump_regs);
 
+	r = 0;
+
 	if (pdev->dev.of_node)
-		hdmi_probe_of(pdev);
+		r = hdmi_probe_of(pdev);
 	else if (pdev->dev.platform_data)
 		hdmi_probe_pdata(pdev);
+
+	if (r)
+		return r; // XXX free resources
 
 	return 0;
 }
