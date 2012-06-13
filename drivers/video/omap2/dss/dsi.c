@@ -5126,9 +5126,6 @@ static int __exit omap_dsihw_remove(struct platform_device *dsidev)
 		dsi->vdds_dsi_reg = NULL;
 	}
 
-	if (dsi->clk_sets != NULL)
-		kfree(dsi->clk_sets);
-
 	return 0;
 }
 
