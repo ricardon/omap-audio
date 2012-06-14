@@ -41,6 +41,7 @@
 #include "clock2xxx.h"
 #include "clock3xxx.h"
 #include "clock44xx.h"
+#include "clock54xx.h"
 
 /*
  * The machine specific code may provide the extra mapping besides the
@@ -497,6 +498,18 @@ void __init omap4430_init_late(void)
 	omap_mux_late_init();
 	omap2_common_pm_late_init();
 	omap4_pm_init();
+}
+#endif
+
+#ifdef CONFIG_SOC_OMAP5
+void __init omap5_init_early(void)
+{
+	omap54xx_voltagedomains_init();
+	omap54xx_powerdomains_init();
+	omap54xx_clockdomains_init();
+	omap54xx_hwmod_init();
+	omap_hwmod_init_postsetup();
+	omap5xxx_clk_init();
 }
 #endif
 
