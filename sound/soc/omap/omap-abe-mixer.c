@@ -1067,10 +1067,10 @@ static const struct snd_soc_dapm_route intercon[] = {
 	{"PDM_DL2", NULL, "DL2 Mixer"},
 
 	/* VxREC Mixer */
-	{"Capture Mixer", "Tones", "VXREC"},
-	{"Capture Mixer", "Voice Playback", "VXREC"},
-	{"Capture Mixer", "Voice Capture", "VXREC"},
-	{"Capture Mixer", "Media Playback", "VXREC"},
+	{"Capture Mixer", "Tones", "TONES_DL"},
+	{"Capture Mixer", "Voice Playback", "VX_DL"},
+	{"Capture Mixer", "Voice Capture", "VX_UL"},
+	{"Capture Mixer", "Media Playback", "MM_DL"},
 
 	/* Audio UL mixer */
 	{"Voice Capture Mixer", "Tones Playback", "TONES_DL"},
@@ -1116,7 +1116,6 @@ static const struct snd_soc_dapm_route intercon[] = {
 	{"DMIC0", NULL, "BE_IN"},
 	{"DMIC1", NULL, "BE_IN"},
 	{"DMIC2", NULL, "BE_IN"},
-	{"VXREC", NULL, "BE_IN"},
 };
 
 int abe_mixer_add_widgets(struct snd_soc_platform *platform)
