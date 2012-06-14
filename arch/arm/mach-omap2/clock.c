@@ -400,7 +400,7 @@ int omap2_clk_set_parent(struct clk *clk, struct clk *new_parent)
 
 /* OMAP3/4 non-CORE DPLL clkops */
 
-#if defined(CONFIG_ARCH_OMAP3) || defined(CONFIG_ARCH_OMAP4)
+#ifdef CONFIG_SOC_HAS_OMAP_DPLL
 
 const struct clkops clkops_omap3_noncore_dpll_ops = {
 	.enable		= omap3_noncore_dpll_enable,
