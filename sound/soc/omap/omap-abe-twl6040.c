@@ -677,7 +677,7 @@ static struct snd_soc_dai_link omap_abe_dai[] = {
 	SND_SOC_DAI_BE_LINK(OMAP_ABE_DAI_DMIC2,	dmic_be_hw_params_fixup),
 	SND_SOC_DAI_OPS(&omap_abe_dmic_ops, NULL),
 },
-
+#if 0
 	{
 		.name = "VXREC",
 		.stream_name = "VXREC Capture",
@@ -694,6 +694,7 @@ static struct snd_soc_dai_link omap_abe_dai[] = {
 		.be_id = OMAP_ABE_DAI_VXREC,
 		.ignore_suspend = 1,
 	},
+#endif
 };
 
 static struct snd_soc_dai_link omap_abe_no_dmic_dai[] = {
