@@ -1924,7 +1924,7 @@ static struct omap_hwmod_dma_info omap44xx_mcbsp1_sdma_reqs[] = {
 
 static struct omap_hwmod_opt_clk mcbsp1_opt_clks[] = {
 	{ .role = "pad_fck", .clk = "pad_clks_ck" },
-	{ .role = "prcm_clk", .clk = "mcbsp1_sync_mux_ck" },
+	{ .role = "prcm_fck", .clk = "mcbsp1_sync_mux_ck" },
 };
 
 static struct omap_hwmod omap44xx_mcbsp1_hwmod = {
@@ -1959,7 +1959,7 @@ static struct omap_hwmod_dma_info omap44xx_mcbsp2_sdma_reqs[] = {
 
 static struct omap_hwmod_opt_clk mcbsp2_opt_clks[] = {
 	{ .role = "pad_fck", .clk = "pad_clks_ck" },
-	{ .role = "prcm_clk", .clk = "mcbsp2_sync_mux_ck" },
+	{ .role = "prcm_fck", .clk = "mcbsp2_sync_mux_ck" },
 };
 
 static struct omap_hwmod omap44xx_mcbsp2_hwmod = {
@@ -1994,7 +1994,7 @@ static struct omap_hwmod_dma_info omap44xx_mcbsp3_sdma_reqs[] = {
 
 static struct omap_hwmod_opt_clk mcbsp3_opt_clks[] = {
 	{ .role = "pad_fck", .clk = "pad_clks_ck" },
-	{ .role = "prcm_clk", .clk = "mcbsp3_sync_mux_ck" },
+	{ .role = "prcm_fck", .clk = "mcbsp3_sync_mux_ck" },
 };
 
 static struct omap_hwmod omap44xx_mcbsp3_hwmod = {
@@ -2029,7 +2029,7 @@ static struct omap_hwmod_dma_info omap44xx_mcbsp4_sdma_reqs[] = {
 
 static struct omap_hwmod_opt_clk mcbsp4_opt_clks[] = {
 	{ .role = "pad_fck", .clk = "pad_clks_ck" },
-	{ .role = "prcm_clk", .clk = "mcbsp4_sync_mux_ck" },
+	{ .role = "prcm_fck", .clk = "mcbsp4_sync_mux_ck" },
 };
 
 static struct omap_hwmod omap44xx_mcbsp4_hwmod = {
