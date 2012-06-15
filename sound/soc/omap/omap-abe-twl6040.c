@@ -752,7 +752,7 @@ static struct snd_soc_dai_link omap_abe_no_dmic_dai[] = {
 	/* Legacy McPDM */
 	SND_SOC_DAI_CONNECT("Legacy McPDM", "twl6040-codec", "omap-pcm-audio",
 		"twl6040-legacy", "mcpdm-legacy"),
-	SND_SOC_DAI_OPS(&omap_abe_dmic_ops, omap_abe_dmic_init),
+	SND_SOC_DAI_OPS(&omap_abe_mcpdm_ops, NULL),
 	SND_SOC_DAI_IGNORE_SUSPEND,
 },
 /*
