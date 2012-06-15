@@ -257,8 +257,7 @@ static int palmas_set_mode_smps(struct regulator_dev *dev, unsigned int mode)
 	unsigned int reg;
 
 	palmas_smps_read(pmic->palmas, palmas_regs_info[id].ctrl_addr, &reg);
-	reg &= ~PALMAS_SMPS12_CTRL_STATUS_MASK;
-	reg >>= PALMAS_SMPS12_CTRL_STATUS_SHIFT;
+	reg &= ~PALMAS_SMPS12_CTRL_MODE_ACTIVE_MASK;
 
 	switch (mode) {
 	case REGULATOR_MODE_NORMAL:
@@ -400,6 +399,60 @@ static struct regulator_ops palmas_ops_smps = {
 	.map_voltage		= palmas_map_voltage_smps,
 };
 
+/* @brief set or clear the bypass bit on SMPS10
+ *
+ * There is not a way to represent this function within the regulator
+ * framework. This sets/clears the bypass of SMPS10 so voltage is obtained
+ * from either SMPS10_IN or BOOST.
+ *
+ * @param palmas pointer to the palmas mfd structure
+ * @param bypass boolean to indicate switch status
+ * @return error or result
+ */
+int palmas_set_bypass_smps10(struct palmas *palmas, int bypass)
+{
+	unsigned int reg;
+
+	palmas_smps_read(palmas, PALMAS_SMPS10_CTRL, &reg);
+
+	if (bypass)
+		reg |= SMPS10_BYPASS_EN;
+	else
+		reg &= ~SMPS10_BYPASS_EN;
+
+	palmas_smps_write(palmas, PALMAS_SMPS10_CTRL, reg);
+
+	return 0;
+}
+EXPORT_SYMBOL(palmas_set_bypass_smps10);
+
+/* @brief set or clear the switch bit on SMPS10
+ *
+ * There is not a way to represent this function within the regulator
+ * framework. This sets/clears the switch of SMPS10 so SMPS10_OUT1 and
+ * SMPS10_OUT2 are shorted together.
+ *
+ * @param palmas pointer to the palmas mfd structure
+ * @param sw boolean to indicate switch status
+ * @return error or result
+ */
+int palmas_set_switch_smps10(struct palmas *palmas, int sw)
+{
+	unsigned int reg;
+
+	palmas_smps_read(palmas, PALMAS_SMPS10_CTRL, &reg);
+
+	if (sw)
+		reg |= SMPS10_SWITCH_EN;
+	else
+		reg &= ~SMPS10_SWITCH_EN;
+
+	palmas_smps_write(palmas, PALMAS_SMPS10_CTRL, reg);
+
+	return 0;
+}
+EXPORT_SYMBOL(palmas_set_switch_smps10);
+
 static int palmas_list_voltage_smps10(struct regulator_dev *dev,
 					unsigned selector)
 {
@@ -502,6 +555,62 @@ static struct regulator_ops palmas_ops_ldo = {
 	.list_voltage		= palmas_list_voltage_ldo,
 	.map_voltage		= palmas_map_voltage_ldo,
 };
+
+/* @brief set or clear the tracking bit on LDO8
+ *
+ * This sets or clears the tracking enabled on LDO8
+ *
+ * @param palmas pointer to the palmas mfd structure
+ * @param tracking a boolean to set/clear tracking
+ * @return error or result
+ */
+int palmas_set_ldo8_tracking(struct palmas *palmas, int tracking)
+{
+	int ret;
+	unsigned int reg;
+
+	ret = palmas_ldo_read(palmas, PALMAS_LDO8_CTRL, &reg);
+	if (ret)
+		return ret;
+
+	if (tracking)
+		reg |= PALMAS_LDO8_CTRL_LDO_TRACKING_EN;
+	else
+		reg &= ~PALMAS_LDO8_CTRL_LDO_TRACKING_EN;
+
+	ret = palmas_ldo_write(palmas, PALMAS_LDO8_CTRL, reg);
+
+	return ret;
+}
+EXPORT_SYMBOL(palmas_set_ldo8_tracking);
+
+/* @brief set or clear the bypass bit on LDO9
+ *
+ * This sets or clears the bypass enabled on LDO9
+ *
+ * @param palmas pointer to the palmas mfd structure
+ * @param bypass a boolean to set/clear bypass
+ * @return error or success
+ */
+int palmas_set_ldo9_bypass(struct palmas *palmas, int bypass)
+{
+	int ret;
+	unsigned int reg;
+
+	ret = palmas_ldo_read(palmas, PALMAS_LDO9_CTRL, &reg);
+	if (ret)
+		return ret;
+
+	if (bypass)
+		reg |= PALMAS_LDO9_CTRL_LDO_BYPASS_EN;
+	else
+		reg &= ~PALMAS_LDO9_CTRL_LDO_BYPASS_EN;
+
+	ret = palmas_ldo_write(palmas, PALMAS_LDO9_CTRL, reg);
+
+	return ret;
+}
+EXPORT_SYMBOL(palmas_set_ldo9_bypass);
 
 /*
  * setup the hardware based sleep configuration of the SMPS/LDO regulators
@@ -775,9 +884,6 @@ static __devinit int palmas_probe(struct platform_device *pdev)
 err_unregister_regulator:
 	while (--id >= 0)
 		regulator_unregister(pmic->rdev[id]);
-	kfree(pmic->rdev);
-	kfree(pmic->desc);
-	kfree(pmic);
 	return ret;
 }
 
@@ -788,10 +894,6 @@ static int __devexit palmas_remove(struct platform_device *pdev)
 
 	for (id = 0; id < PALMAS_NUM_REGS; id++)
 		regulator_unregister(pmic->rdev[id]);
-
-	kfree(pmic->rdev);
-	kfree(pmic->desc);
-	kfree(pmic);
 	return 0;
 }
 
