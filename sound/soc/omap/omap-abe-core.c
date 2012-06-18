@@ -32,6 +32,7 @@
 #include <linux/debugfs.h>
 #include <linux/opp.h>
 #include <linux/dma-mapping.h>
+#include <linux/of_device.h>
 
 #include <sound/soc.h>
 #include <plat/omap-pm.h>
@@ -419,10 +420,17 @@ static int __devexit abe_engine_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct of_device_id omap_aess_of_match[] = {
+	{ .compatible = "ti,omap4-aess", },
+	{ }
+};
+MODULE_DEVICE_TABLE(of, omap_mcpdm_of_match);
+
 static struct platform_driver omap_aess_driver = {
 	.driver = {
 		.name = "aess",
 		.owner = THIS_MODULE,
+		.of_match_table = omap_aess_of_match,
 	},
 	.probe = abe_engine_probe,
 	.remove = __devexit_p(abe_engine_remove),
