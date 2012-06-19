@@ -373,6 +373,8 @@ int snd_soc_dapm_weak_routes(struct snd_soc_dapm_context *dapm,
 /* dapm events */
 void snd_soc_dapm_stream_event(struct snd_soc_pcm_runtime *rtd, int stream,
 	int event);
+void snd_soc_dapm_dai_stream_event(struct snd_soc_dai *dai, int stream,
+	int event);
 void snd_soc_dapm_shutdown(struct snd_soc_card *card);
 
 /* external DAPM widget events */
@@ -403,6 +405,7 @@ void snd_soc_dapm_auto_nc_codec_pins(struct snd_soc_codec *codec);
 
 /* Mostly internal - should not normally be used */
 void dapm_mark_dirty(struct snd_soc_dapm_widget *w, const char *reason);
+void soc_dapm_free_widgets(struct snd_soc_dapm_context *dapm);
 
 /* dapm path query */
 int snd_soc_dapm_dai_get_connected_widgets(struct snd_soc_dai *dai, int stream,
@@ -411,32 +414,33 @@ int snd_soc_dapm_dai_get_connected_widgets(struct snd_soc_dai *dai, int stream,
 /* dapm widget types */
 enum snd_soc_dapm_type {
 	snd_soc_dapm_input = 0,		/* input pin */
-	snd_soc_dapm_output,		/* output pin */
-	snd_soc_dapm_mux,			/* selects 1 analog signal from many inputs */
-	snd_soc_dapm_virt_mux,			/* virtual version of snd_soc_dapm_mux */
-	snd_soc_dapm_value_mux,			/* selects 1 analog signal from many inputs */
-	snd_soc_dapm_mixer,			/* mixes several analog signals together */
-	snd_soc_dapm_mixer_named_ctl,		/* mixer with named controls */
-	snd_soc_dapm_pga,			/* programmable gain/attenuation (volume) */
-	snd_soc_dapm_out_drv,			/* output driver */
-	snd_soc_dapm_adc,			/* analog to digital converter */
-	snd_soc_dapm_dac,			/* digital to analog converter */
-	snd_soc_dapm_micbias,		/* microphone bias (power) */
-	snd_soc_dapm_mic,			/* microphone */
-	snd_soc_dapm_hp,			/* headphones */
-	snd_soc_dapm_spk,			/* speaker */
-	snd_soc_dapm_line,			/* line input/output */
-	snd_soc_dapm_switch,		/* analog switch */
-	snd_soc_dapm_vmid,			/* codec bias/vmid - to minimise pops */
-	snd_soc_dapm_pre,			/* machine specific pre widget - exec first */
-	snd_soc_dapm_post,			/* machine specific post widget - exec last */
-	snd_soc_dapm_supply,		/* power/clock supply */
-	snd_soc_dapm_regulator_supply,	/* external regulator */
-	snd_soc_dapm_aif_in,		/* audio interface input */
-	snd_soc_dapm_aif_out,		/* audio interface output */
-	snd_soc_dapm_siggen,		/* signal generator */
-	snd_soc_dapm_dai,		/* link to DAI structure */
-	snd_soc_dapm_dai_link,		/* link between two DAI structures */
+	snd_soc_dapm_output = 1,		/* output pin */
+	snd_soc_dapm_mux = 2,			/* selects 1 analog signal from many inputs */
+	snd_soc_dapm_virt_mux = 3,			/* virtual version of snd_soc_dapm_mux */
+	snd_soc_dapm_value_mux = 4,			/* selects 1 analog signal from many inputs */
+	snd_soc_dapm_mixer = 5,			/* mixes several analog signals together */
+	snd_soc_dapm_mixer_named_ctl = 6,		/* mixer with named controls */
+	snd_soc_dapm_pga = 7,			/* programmable gain/attenuation (volume) */
+	snd_soc_dapm_out_drv = 8,			/* output driver */
+	snd_soc_dapm_adc = 9,			/* analog to digital converter */
+	snd_soc_dapm_dac = 10,			/* digital to analog converter */
+	snd_soc_dapm_micbias = 11,		/* microphone bias (power) */
+	snd_soc_dapm_mic = 12,			/* microphone */
+	snd_soc_dapm_hp = 13,			/* headphones */
+	snd_soc_dapm_spk = 14,			/* speaker */
+	snd_soc_dapm_line = 15,			/* line input/output */
+	snd_soc_dapm_switch = 16,		/* analog switch */
+	snd_soc_dapm_vmid = 17,			/* codec bias/vmid - to minimise pops */
+	snd_soc_dapm_pre =18,			/* machine specific pre widget - exec first */
+	snd_soc_dapm_post = 19,			/* machine specific post widget - exec last */
+	snd_soc_dapm_supply = 20,		/* power/clock supply */
+	snd_soc_dapm_regulator_supply = 21,	/* external regulator */
+	snd_soc_dapm_clock_supply = 22,	/* external clock */
+	snd_soc_dapm_aif_in = 23,		/* audio interface input */
+	snd_soc_dapm_aif_out = 24,		/* audio interface output */
+	snd_soc_dapm_siggen = 25,		/* signal generator */
+	snd_soc_dapm_dai = 26,		/* link to DAI structure */
+	snd_soc_dapm_dai_link = 27,		/* link between two DAI structures */
 };
 
 enum snd_soc_dapm_subclass {
@@ -490,6 +494,7 @@ struct snd_soc_dapm_widget {
 	const char *sname;	/* stream name */
 	struct snd_soc_codec *codec;
 	struct snd_soc_platform *platform;
+	struct snd_soc_dai *dai;
 	struct list_head list;
 	struct snd_soc_dapm_context *dapm;
 
@@ -515,6 +520,9 @@ struct snd_soc_dapm_widget {
 	unsigned char ignore_suspend:1;         /* kept enabled over suspend */
 	unsigned char new_power:1;		/* power from this run */
 	unsigned char power_checked:1;		/* power checked this run */
+	unsigned char dai_endpoint:1;	/* DAI end point for current stream event */
+	unsigned char denum:1;          /* dynamic enum control */
+	unsigned char dmixer:1;         /* dynamic mixer control*/
 	int subseq;				/* sort within widget type */
 
 	int (*power_check)(struct snd_soc_dapm_widget *w);
@@ -537,6 +545,8 @@ struct snd_soc_dapm_widget {
 	struct list_head dirty;
 	int inputs;
 	int outputs;
+
+	struct clk *clk;
 };
 
 struct snd_soc_dapm_update {

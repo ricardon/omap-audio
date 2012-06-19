@@ -93,7 +93,8 @@ $(obj)/uImage:	$(obj)/zImage FORCE
 	$(call if_changed,uimage)
 	@echo '  Image $@ is ready'
 
-$(obj)/uImage-dtb.%:	$(obj)/zImage-dtb.% FORCE
+$(obj)/uImage-dtb.%:  $(obj)/zImage-dtb.% FORCE
+	@$(check_for_multiple_loadaddr)
 	$(call if_changed,uimage)
 	@echo '  Image $@ is ready'
 
