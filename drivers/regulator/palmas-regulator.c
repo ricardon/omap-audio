@@ -708,7 +708,8 @@ static int palmas_ldo_init(struct palmas *palmas, int id,
 static __devinit int palmas_probe(struct platform_device *pdev)
 {
 	struct palmas *palmas = dev_get_drvdata(pdev->dev.parent);
-	struct palmas_pmic_platform_data *pdata = pdev->dev.platform_data;
+	struct palmas_platform_data *pdata1 = palmas->dev->platform_data;
+	struct palmas_pmic_platform_data *pdata = pdata1->pmic_pdata;
 	struct regulator_dev *rdev;
 	struct regulator_config config = { };
 	struct palmas_pmic *pmic;
