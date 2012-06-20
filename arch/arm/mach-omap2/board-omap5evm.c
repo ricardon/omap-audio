@@ -32,6 +32,9 @@
 #include <asm/hardware/gic.h>
 #include <plat/common.h>
 
+#include <video/omapdss.h>
+#include <video/omap-panel-lg4591.h>
+
 #ifdef CONFIG_OMAP5_SEVM_PALMAS
 #define OMAP5_GPIO_END	0
 
@@ -274,15 +277,22 @@ static struct regulator_init_data omap5_ldo1 = {
 	},
 };
 
+static struct regulator_consumer_supply omap5evm_lcd_panel_supply[] = {
+	REGULATOR_SUPPLY("panel_supply", "omapdss_dsi.0"),
+};
+
 static struct regulator_init_data omap5_ldo2 = {
 	.constraints = {
-		.min_uV			= 2800000,
-		.max_uV			= 2800000,
+		.min_uV			= 2900000,
+		.max_uV			= 2900000,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
-	.valid_ops_mask		= REGULATOR_CHANGE_MODE
+		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.apply_uV		= 1,
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(omap5evm_lcd_panel_supply),
+	.consumer_supplies	= omap5evm_lcd_panel_supply,
 };
 
 static struct regulator_init_data omap5_ldo3 = {
@@ -329,6 +339,12 @@ static struct regulator_init_data omap5_ldo6 = {
 	},
 };
 
+static struct regulator_consumer_supply omap5_dss_phy_supply[] = {
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi.0"),
+	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi.1"),
+};
+
 static struct regulator_init_data omap5_ldo7 = {
 	.constraints = {
 		.min_uV			= 1500000,
@@ -337,7 +353,10 @@ static struct regulator_init_data omap5_ldo7 = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.apply_uV		= 1,
 	},
+	.num_consumer_supplies	= ARRAY_SIZE(omap5_dss_phy_supply),
+	.consumer_supplies	= omap5_dss_phy_supply,
 };
 
 static struct regulator_init_data omap5_ldo8 = {
@@ -485,8 +504,82 @@ static int __init omap_5430evm_i2c_init(void)
 	return 0;
 }
 
+static struct panel_lg4591_data dsi_panel;
+static struct omap_dss_board_info omap5evm_dss_data;
+
+static void omap5evm_lcd_init(void)
+{
+	int r;
+
+	r = gpio_request_one(dsi_panel.reset_gpio, GPIOF_DIR_OUT,
+		"lcd1_reset_gpio");
+	if (r)
+		pr_err("%s: Could not get lcd1_reset_gpio\n", __func__);
+}
+
+static void __init omap5evm_display_init(void)
+{
+	omap5evm_lcd_init();
+	omap_display_init(&omap5evm_dss_data);
+}
+
+static void lg_panel_set_power(bool enable)
+{
+}
+
+static struct panel_lg4591_data dsi_panel = {
+	.reset_gpio = 183,
+	.set_power = lg_panel_set_power,
+	.pin_config = {
+		.num_pins	= 10,
+		.pins		= { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+	},
+};
+
+static struct omap_dss_device omap5evm_lcd_device = {
+	.name			= "lcd",
+	.driver_name		= "lg4591",
+	.type			= OMAP_DISPLAY_TYPE_DSI,
+	.data			= &dsi_panel,
+	.clocks = {
+		.dispc = {
+			.channel = {
+				.lck_div	= 1,	/* LCD */
+				.pck_div	= 2,	/* PCD */
+				.lcd_clk_src	=
+					OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC,
+			},
+			.dispc_fclk_src = OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC,
+		},
+		.dsi = {
+			.regn		= 19,	/* DSI_PLL_REGN */
+			.regm		= 233,	/* DSI_PLL_REGM */
+
+			.regm_dispc	= 3,	/* PLL_CLK1 (M4) */
+			.regm_dsi	= 3,	/* PLL_CLK2 (M5) */
+			.lp_clk_div	= 9,	/* LPDIV */
+
+			.dsi_fclk_src	= OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DSI,
+		},
+	},
+	.panel.dsi_mode		= OMAP_DSS_DSI_VIDEO_MODE,
+	.channel		= OMAP_DSS_CHANNEL_LCD,
+};
+
+static struct omap_dss_device *omap5evm_dss_devices[] = {
+	&omap5evm_lcd_device,
+};
+
+static struct omap_dss_board_info omap5evm_dss_data = {
+	.num_devices	= ARRAY_SIZE(omap5evm_dss_devices),
+	.devices	= omap5evm_dss_devices,
+	.default_device	= &omap5evm_lcd_device,
+};
+
 void __init omap_5430evm_init(void)
 {
 	omap_5430evm_i2c_init();
+
+	omap5evm_display_init();
 }
 
