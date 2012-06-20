@@ -695,7 +695,6 @@ static const struct ti_hdmi_ip_ops omap4_hdmi_functions = {
 	.audio_config		=	ti_hdmi_4xxx_audio_config,
 #endif
 	.irq_handler		=	ti_hdmi_4xxx_irq_handler,
-
 };
 
 /* HDMI OMAP5 Functions*/
@@ -710,6 +709,7 @@ static const struct ti_hdmi_ip_ops omap5_hdmi_functions = {
 	.video_enable		=	ti_hdmi_4xxx_wp_video_start,
 	.video_disable		=	ti_hdmi_4xxx_wp_video_stop,
 	.irq_handler		=	ti_hdmi_4xxx_irq_handler,
+	.irq_process		=	ti_hdmi_5xxx_irq_process,
 };
 
 void dss_init_hdmi_ip_ops(struct hdmi_ip_data *ip_data)
