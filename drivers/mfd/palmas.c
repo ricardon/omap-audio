@@ -356,8 +356,8 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 		}
 	}
 
-	ret = regmap_add_irq_chip(palmas->regmap[1], palmas->irq,
-			IRQF_ONESHOT | IRQF_TRIGGER_LOW, -1, &palmas_irq_chip,
+	ret = regmap_add_irq_chip(palmas->regmap[0], palmas->irq,
+			IRQF_ONESHOT /*| IRQF_TRIGGER_LOW*/, -1, &palmas_irq_chip,
 			&palmas->irq_data);
 	if (ret < 0)
 		goto err;
