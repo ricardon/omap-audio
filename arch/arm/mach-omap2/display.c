@@ -37,6 +37,7 @@
 
 #define DISPC_CONTROL		0x0040
 #define DISPC_CONTROL2		0x0238
+#define DISPC_CONTROL3		0x0848
 #define DISPC_IRQSTATUS		0x0018
 
 #define DSS_SYSCONFIG		0x10
@@ -53,6 +54,7 @@
 #define EVSYNC_ODD_IRQ_SHIFT	3
 #define FRAMEDONE2_IRQ_SHIFT	22
 #define FRAMEDONETV_IRQ_SHIFT	24
+#define FRAMEDONE3_IRQ_SHIFT	30
 
 /*
  * FRAMEDONE_IRQ_TIMEOUT: how long (in milliseconds) to wait during DISPC
@@ -96,6 +98,15 @@ static const struct omap_dss_hwmod_data omap4_dss_hwmod_data[] __initdata = {
 	{ "dss_venc", "omapdss_venc", -1 },
 	{ "dss_dsi1", "omapdss_dsi", 0 },
 	{ "dss_dsi2", "omapdss_dsi", 1 },
+	{ "dss_hdmi", "omapdss_hdmi", -1 },
+};
+
+static const struct omap_dss_hwmod_data omap5_dss_hwmod_data[] __initdata = {
+	{ "dss_core", "omapdss_dss", -1 },
+	{ "dss_dispc", "omapdss_dispc", -1 },
+	{ "dss_rfbi", "omapdss_rfbi", -1 },
+	{ "dss_dsi1_a", "omapdss_dsi", 0 },
+	{ "dss_dsi1_c", "omapdss_dsi", 1 },
 	{ "dss_hdmi", "omapdss_hdmi", -1 },
 };
 
@@ -158,11 +169,48 @@ static int omap4_dsi_mux_pads(int dsi_id, unsigned lanes)
 	return 0;
 }
 
+#define CONTROL_PAD_BASE	0x4A002800
+#define CONTROL_DSIPHY		0x614
+#define CONTROL_HDMI_HPD	0x13C
+
+static int omap5_dsi_mux_pads(int dsi_id, unsigned lanes)
+{
+	u32 enable_mask, enable_shift, reg;
+	void __iomem *ctrl_pad_base = NULL;
+
+	ctrl_pad_base = ioremap(CONTROL_PAD_BASE, SZ_4K);
+	if (!ctrl_pad_base)
+		return -ENXIO;
+
+	if (dsi_id == 0) {
+		enable_mask = OMAP4_DSI1_LANEENABLE_MASK;
+		enable_shift = OMAP4_DSI1_LANEENABLE_SHIFT;
+	} else if (dsi_id == 1) {
+		enable_mask = OMAP4_DSI2_LANEENABLE_MASK;
+		enable_shift = OMAP4_DSI2_LANEENABLE_SHIFT;
+	} else {
+		return -ENODEV;
+	}
+
+	reg = __raw_readl(ctrl_pad_base + CONTROL_DSIPHY);
+	reg &= ~enable_mask;
+	reg |= (lanes << enable_shift) & enable_mask;
+	__raw_writel(reg, ctrl_pad_base + CONTROL_DSIPHY);
+
+	return 0;
+}
+
 int __init omap_hdmi_init(enum omap_hdmi_flags flags)
 {
+	void __iomem *ctrl_pad_base = NULL;
+	u32 reg;
+
 	if (cpu_is_omap44xx())
 		omap4_hdmi_mux_pads(flags);
-
+	if (cpu_is_omap54xx()) {
+		ctrl_pad_base = ioremap(CONTROL_PAD_BASE, SZ_4K);
+		__raw_writel(0x1060100, ctrl_pad_base + CONTROL_HDMI_HPD);
+	}
 	return 0;
 }
 
@@ -171,6 +219,9 @@ static int omap_dsi_enable_pads(int dsi_id, unsigned lane_mask)
 	if (cpu_is_omap44xx())
 		return omap4_dsi_mux_pads(dsi_id, lane_mask);
 
+	if (cpu_is_omap54xx())
+		return omap5_dsi_mux_pads(dsi_id, lane_mask);
+
 	return 0;
 }
 
@@ -178,6 +229,9 @@ static void omap_dsi_disable_pads(int dsi_id, unsigned lane_mask)
 {
 	if (cpu_is_omap44xx())
 		omap4_dsi_mux_pads(dsi_id, 0);
+
+	if (cpu_is_omap54xx())
+		omap5_dsi_mux_pads(dsi_id, 0);
 }
 
 static int omap_dss_set_min_bus_tput(struct device *dev, unsigned long tput)
@@ -314,9 +368,12 @@ int __init omap_display_init(struct omap_dss_board_info *board_data)
 	} else if (cpu_is_omap34xx()) {
 		curr_dss_hwmod = omap3_dss_hwmod_data;
 		oh_count = ARRAY_SIZE(omap3_dss_hwmod_data);
-	} else {
+	} else if (cpu_is_omap44xx()) {
 		curr_dss_hwmod = omap4_dss_hwmod_data;
 		oh_count = ARRAY_SIZE(omap4_dss_hwmod_data);
+	} else {
+		curr_dss_hwmod = omap5_dss_hwmod_data;
+		oh_count = ARRAY_SIZE(omap5_dss_hwmod_data);
 	}
 
 	/*
@@ -376,7 +433,7 @@ int __init omap_display_init(struct omap_dss_board_info *board_data)
 static void dispc_disable_outputs(void)
 {
 	u32 v, irq_mask = 0;
-	bool lcd_en, digit_en, lcd2_en = false;
+	bool lcd_en, digit_en, lcd2_en = false, lcd3_en = false;
 	int i;
 	struct omap_dss_dispc_dev_attr *da;
 	struct omap_hwmod *oh;
@@ -405,7 +462,13 @@ static void dispc_disable_outputs(void)
 		lcd2_en = v & LCD_EN_MASK;
 	}
 
-	if (!(lcd_en | digit_en | lcd2_en))
+	/* store value of LCDENABLE for LCD3 */
+	if (da->manager_count > 3) {
+		v = omap_hwmod_read(oh, DISPC_CONTROL3);
+		lcd3_en = v & LCD_EN_MASK;
+	}
+
+	if (!(lcd_en | digit_en | lcd2_en | lcd3_en))
 		return; /* no managers currently enabled */
 
 	/*
@@ -427,9 +490,12 @@ static void dispc_disable_outputs(void)
 	if (lcd2_en)
 		irq_mask |= 1 << FRAMEDONE2_IRQ_SHIFT;
 
+	if (lcd3_en)
+		irq_mask |= 1 << FRAMEDONE3_IRQ_SHIFT;
+
 	/*
 	 * clear any previous FRAMEDONE, FRAMEDONETV,
-	 * EVSYNC_EVEN/ODD or FRAMEDONE2 interrupts
+	 * EVSYNC_EVEN/ODD, FRAMEDONE2 or FRAMEDONE3 interrupts
 	 */
 	omap_hwmod_write(irq_mask, oh, DISPC_IRQSTATUS);
 
@@ -443,6 +509,13 @@ static void dispc_disable_outputs(void)
 		v = omap_hwmod_read(oh, DISPC_CONTROL2);
 		v &= ~LCD_EN_MASK;
 		omap_hwmod_write(v, oh, DISPC_CONTROL2);
+	}
+
+	/* disable LCD3 manager */
+	if (da->manager_count > 3) {
+		v = omap_hwmod_read(oh, DISPC_CONTROL3);
+		v &= ~LCD_EN_MASK;
+		omap_hwmod_write(v, oh, DISPC_CONTROL3);
 	}
 
 	i = 0;
