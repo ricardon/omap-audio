@@ -325,6 +325,8 @@ struct dsi_data {
 	unsigned long  fint_min, fint_max;
 	unsigned long lpdiv_max;
 
+	int ddr_div;
+
 	unsigned num_lanes_supported;
 
 	struct dsi_lane_config lanes[DSI_MAX_NR_LANES];
@@ -1179,7 +1181,7 @@ static unsigned long dsi_get_txbyteclkhs(struct platform_device *dsidev)
 {
 	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
 
-	return dsi->current_cinfo.clkin4ddr / 16;
+	return dsi->current_cinfo.clkin4ddr / (dsi->ddr_div * 4);
 }
 
 static unsigned long dsi_fclk_rate(struct platform_device *dsidev)
@@ -1491,9 +1493,9 @@ int dsi_pll_set_clock_div(struct platform_device *dsidev,
 			cinfo->clkin4ddr);
 
 	DSSDBG("Data rate on 1 DSI lane %ld Mbps\n",
-			cinfo->clkin4ddr / 1000 / 1000 / 2);
+			(cinfo->clkin4ddr / 1000 / 1000 / dsi->ddr_div) * 2);
 
-	DSSDBG("Clock lane freq %ld Hz\n", cinfo->clkin4ddr / 4);
+	DSSDBG("Clock lane freq %ld Hz\n", cinfo->clkin4ddr / dsi->ddr_div);
 
 	DSSDBG("regm_dispc = %d, %s (%s) = %lu\n", cinfo->regm_dispc,
 		dss_get_generic_clk_source_name(OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC),
@@ -1708,8 +1710,8 @@ static void dsi_dump_dsidev_clocks(struct platform_device *dsidev,
 
 	seq_printf(s,	"Fint\t\t%-16luregn %u\n", cinfo->fint, cinfo->regn);
 
-	seq_printf(s,	"CLKIN4DDR\t%-16luregm %u\n",
-			cinfo->clkin4ddr, cinfo->regm);
+	seq_printf(s,	"CLKIN%dDDR\t%-16luregm %u\n",
+			dsi->ddr_div, cinfo->clkin4ddr, cinfo->regm);
 
 	seq_printf(s,	"DSI_PLL_HSDIV_DISPC (%s)\t%-16luregm_dispc %u\t(%s)\n",
 			dss_feat_get_clk_source_name(dsi_module == 0 ?
@@ -1738,7 +1740,7 @@ static void dsi_dump_dsidev_clocks(struct platform_device *dsidev,
 	seq_printf(s,	"DSI_FCLK\t%lu\n", dsi_fclk_rate(dsidev));
 
 	seq_printf(s,	"DDR_CLK\t\t%lu\n",
-			cinfo->clkin4ddr / 4);
+			cinfo->clkin4ddr / dsi->ddr_div);
 
 	seq_printf(s,	"TxByteClkHS\t%lu\n", dsi_get_txbyteclkhs(dsidev));
 
@@ -2078,7 +2080,7 @@ static inline unsigned ns2ddr(struct platform_device *dsidev, unsigned ns)
 	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
 
 	/* convert time in ns to ddr ticks, rounding up */
-	unsigned long ddr_clk = dsi->current_cinfo.clkin4ddr / 4;
+	unsigned long ddr_clk = dsi->current_cinfo.clkin4ddr / dsi->ddr_div;
 	return (ns * (ddr_clk / 1000 / 1000) + 999) / 1000;
 }
 
@@ -2086,7 +2088,7 @@ static inline unsigned ddr2ns(struct platform_device *dsidev, unsigned ddr)
 {
 	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
 
-	unsigned long ddr_clk = dsi->current_cinfo.clkin4ddr / 4;
+	unsigned long ddr_clk = dsi->current_cinfo.clkin4ddr / dsi->ddr_div;
 	return ddr * 1000 * 1000 / (ddr_clk / 1000);
 }
 
@@ -5001,6 +5003,8 @@ static int __init omap_dsihw_probe(struct platform_device *dsidev)
 		return r;
 
 	pm_runtime_enable(&dsidev->dev);
+
+	dsi->ddr_div = dss_feat_get_dsi_ddr_div();
 
 	r = dsi_runtime_get(dsidev);
 	if (r)
