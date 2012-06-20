@@ -35,10 +35,10 @@
 #include <video/omapdss.h>
 #include <video/omap-panel-lg4591.h>
 
+#define HDMI_GPIO_HPD 193
+
 #ifdef CONFIG_OMAP5_SEVM_PALMAS
 #define OMAP5_GPIO_END	0
-
-#define HDMI_GPIO_HPD 193
 
 static struct palmas_gpadc_platform_data omap5_palmas_gpadc = {
 	.ch3_current = 0,
