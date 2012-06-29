@@ -118,31 +118,6 @@ static struct palmas_reg_init omap5_ldousb_init = {
 	.mode_sleep = 0,
 };
 
-static struct palmas_reg_init *palmas_omap_reg_init[] = {
-	&omap5_smps12_init,
-	NULL, /* SMPS123 not used in this configuration */
-	NULL, /* SMPS3 not used in this configuration */
-	&omap5_smps45_init,
-	NULL, /* SMPS457 not used in this configuration */
-	&omap5_smps6_init,
-	&omap5_smps7_init,
-	&omap5_smps8_init,
-	&omap5_smps9_init,
-	&omap5_smps10_init,
-	&omap5_ldo1_init,
-	&omap5_ldo2_init,
-	&omap5_ldo3_init,
-	&omap5_ldo4_init,
-	&omap5_ldo5_init,
-	&omap5_ldo6_init,
-	&omap5_ldo7_init,
-	&omap5_ldo8_init,
-	&omap5_ldo9_init,
-	&omap5_ldoln_init,
-	&omap5_ldousb_init,
-
-};
-
 /* Constraints for Regulators */
 static struct regulator_init_data omap5_smps12 = {
 	.constraints = {
@@ -358,41 +333,59 @@ static struct regulator_init_data omap5_ldousb = {
 	},
 };
 
-static struct regulator_init_data *palmas_omap5_reg[] = {
-	&omap5_smps12,
-	NULL, /* SMPS123 not used in this configuration */
-	NULL, /* SMPS3 not used in this configuration */
-	&omap5_smps45,
-	NULL, /* SMPS457 not used in this configuration */
-	&omap5_smps6,
-	&omap5_smps7,
-	&omap5_smps8,
-	&omap5_smps9,
-	&omap5_smps10,
-
-	&omap5_ldo1,
-	&omap5_ldo2,
-	&omap5_ldo3,
-	&omap5_ldo4,
-	&omap5_ldo5,
-	&omap5_ldo6,
-	&omap5_ldo7,
-	&omap5_ldo8,
-	&omap5_ldo9,
-	&omap5_ldoln,
-	&omap5_ldousb,
-};
-
 static struct palmas_pmic_platform_data omap5_palmas_pmic = {
-	.reg_data = palmas_omap5_reg,
-	.reg_init= palmas_omap_reg_init,
+	.reg_data = {
+			&omap5_smps12,
+			NULL, /* SMPS123 not used in this configuration */
+			NULL, /* SMPS3 not used in this configuration */
+			&omap5_smps45,
+			NULL, /* SMPS457 not used in this configuration */
+			&omap5_smps6,
+			&omap5_smps7,
+			&omap5_smps8,
+			&omap5_smps9,
+			&omap5_smps10,
 
+			&omap5_ldo1,
+			&omap5_ldo2,
+			&omap5_ldo3,
+			&omap5_ldo4,
+			&omap5_ldo5,
+			&omap5_ldo6,
+			&omap5_ldo7,
+			&omap5_ldo8,
+			&omap5_ldo9,
+			&omap5_ldoln,
+			&omap5_ldousb,
+		},
+	.reg_init = {
+			&omap5_smps12_init,
+			NULL, /* SMPS123 not used in this configuration */
+			NULL, /* SMPS3 not used in this configuration */
+			&omap5_smps45_init,
+			NULL, /* SMPS457 not used in this configuration */
+			&omap5_smps6_init,
+			&omap5_smps7_init,
+			&omap5_smps8_init,
+			&omap5_smps9_init,
+			&omap5_smps10_init,
+			&omap5_ldo1_init,
+			&omap5_ldo2_init,
+			&omap5_ldo3_init,
+			&omap5_ldo4_init,
+			&omap5_ldo5_init,
+			&omap5_ldo6_init,
+			&omap5_ldo7_init,
+			&omap5_ldo8_init,
+			&omap5_ldo9_init,
+			&omap5_ldoln_init,
+			&omap5_ldousb_init,
+
+		},
 	.ldo6_vibrator = 0,
 };
 
 static struct palmas_resource_platform_data omap5_palmas_resource = {
-	.clk32kg_mode_sleep = 0,
-	.clk32kgaudio_mode_sleep = 0,
 	.regen1_mode_sleep = 0,
 	.regen2_mode_sleep = 0,
 	.sysen1_mode_sleep = 0,
@@ -414,6 +407,10 @@ static struct palmas_resource_platform_data omap5_palmas_resource = {
 	.enable2_ldo2 = 0,
 };
 
+static struct palmas_clk_platform_data omap5_palmas_clk = {
+	.clk32kg_mode_sleep = 0,
+	.clk32kgaudio_mode_sleep = 0,
+};
 
 static struct palmas_platform_data palmas_omap5 = {
 	.gpio_base = OMAP5_GPIO_END,
@@ -422,6 +419,7 @@ static struct palmas_platform_data palmas_omap5 = {
 	.pmic_pdata = &omap5_palmas_pmic,
 	/*.usb_pdatda = &omap5_palmas_usb,*/
 	.resource_pdata = &omap5_palmas_resource,
+	.clk_pdata = &omap5_palmas_clk,
 
 	.mux_from_pdata = 0,
 	.pad1 = 0x00,
