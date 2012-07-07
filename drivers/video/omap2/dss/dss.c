@@ -651,9 +651,26 @@ void dss_set_dac_pwrdn_bgz(bool enable)
 	REG_FLD_MOD(DSS_CONTROL, enable, 5, 5);	/* DAC Power-Down Control */
 }
 
-void dss_select_hdmi_venc_clk_source(enum dss_hdmi_venc_clk_source_select hdmi)
+int dss_select_hdmi_venc_clk_source(enum dss_hdmi_venc_clk_source_select src)
 {
-	REG_FLD_MOD(DSS_CONTROL, hdmi, 15, 15);	/* VENC_HDMI_SWITCH */
+	enum omap_display_type displays;
+
+	displays = dss_feat_get_supported_displays(OMAP_DSS_CHANNEL_DIGIT);
+
+	/* discard invalid cases */
+	if (src == DSS_VENC_TV_CLK && !(displays & OMAP_DISPLAY_TYPE_VENC))
+		return -EINVAL;
+
+	if (src == DSS_HDMI_M_PCLK && !(displays & OMAP_DISPLAY_TYPE_HDMI))
+		return -EINVAL;
+
+	/* if VENC is not supported, the only source is HDMI. No need to set */
+	if (src == DSS_HDMI_M_PCLK && !(displays & OMAP_DISPLAY_TYPE_VENC))
+		return 0;
+
+	/* select only if bot VENC and HDMI are supported */
+	REG_FLD_MOD(DSS_CONTROL, src, 15, 15);
+	return 0;
 }
 
 enum dss_hdmi_venc_clk_source_select dss_get_hdmi_venc_clk_source(void)

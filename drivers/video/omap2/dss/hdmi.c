@@ -388,7 +388,11 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	hdmi.ip_data.ops->video_configure(&hdmi.ip_data);
 
 	/* Make selection of HDMI in DSS */
-	dss_select_hdmi_venc_clk_source(DSS_HDMI_M_PCLK);
+	r = dss_select_hdmi_venc_clk_source(DSS_HDMI_M_PCLK);
+	if (r) {
+		DSSDBG("Failed to select HDMI as sync source");
+		goto err_clk_src;
+	}
 
 	/* Select the dispc clock source as PRCM clock, to ensure that it is not
 	 * DSI PLL source as the clock selected by DSI PLL might not be
@@ -418,6 +422,7 @@ err_mgr_enable:
 	hdmi.ip_data.ops->video_disable(&hdmi.ip_data);
 err_vid_enable:
 	hdmi.ip_data.ops->phy_disable(&hdmi.ip_data);
+err_clk_src:
 err_phy_enable:
 	hdmi.ip_data.ops->pll_disable(&hdmi.ip_data);
 err_pll_enable:
