@@ -56,7 +56,8 @@
 static struct {
 	struct mutex lock;
 	struct platform_device *pdev;
-#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO) || \
+	defined(CONFIG_OMAP5_DSS_HDMI_AUDIO)
 	struct platform_device *audio_pdev;
 #endif
 
@@ -853,7 +854,8 @@ static void hdmi_put_clocks(void)
 		clk_put(hdmi.sys_clk);
 }
 
-#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO) || \
+	defined(CONFIG_OMAP5_DSS_HDMI_AUDIO)
 static int hdmi_probe_audio(struct platform_device *pdev)
 {
 	struct resource *res;
@@ -1307,7 +1309,8 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		goto err_panel_init;
 	}
 
-#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO) || \
+	defined(CONFIG_OMAP5_DSS_HDMI_AUDIO)
 	r = hdmi_probe_audio(pdev);
 	if (r)
 		goto err_audio_dev;
@@ -1323,7 +1326,8 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 
 	return 0;
 
-#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO) || \
+	defined(CONFIG_OMAP5_DSS_HDMI_AUDIO)
 err_audio_dev:
 	hdmi_panel_exit();
 #endif
@@ -1341,7 +1345,8 @@ static int __exit hdmi_remove_child(struct device *dev, void *data)
 
 static int __exit omapdss_hdmihw_remove(struct platform_device *pdev)
 {
-#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO) || \
+	defined(CONFIG_OMAP5_DSS_HDMI_AUDIO)
 	if (!IS_ERR(hdmi.audio_pdev))
 		platform_device_unregister(hdmi.audio_pdev);
 #endif
