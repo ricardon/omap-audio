@@ -402,6 +402,21 @@ static struct platform_device omap_hdmi_audio = {
 	.id	= -1,
 };
 
+/*
+ * FIXME: This is a hack to include the platform device for the
+ * HDMI audio codec. This used to come from the omap5evm board file.
+ * However, the codec should be described using the device tree.
+ */
+#if defined(CONFIG_OMAP5_DSS_HDMI_AUDIO)
+static struct platform_device omap5evm_hdmi_audio_codec = {
+	.name          = "hdmi-audio-codec",
+	.id            = -1,
+	.dev            = {
+		.platform_data = NULL,
+	},
+};
+#endif
+
 static void __init omap_init_hdmi_audio(void)
 {
 	struct omap_hwmod *oh;
@@ -419,6 +434,9 @@ static void __init omap_init_hdmi_audio(void)
 	     "Can't build omap_device for omap-hdmi-audio-dai.\n");
 
 	platform_device_register(&omap_hdmi_audio);
+#if defined(CONFIG_OMAP5_DSS_HDMI_AUDIO)
+	platform_device_register(&omap5evm_hdmi_audio_codec);
+#endif
 }
 #else
 static inline void omap_init_hdmi_audio(void) {}
