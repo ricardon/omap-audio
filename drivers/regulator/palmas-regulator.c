@@ -14,6 +14,7 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/interrupt.h>
 #include <linux/init.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
@@ -30,6 +31,7 @@ struct regs_info {
 	u8	vsel_addr;
 	u8	ctrl_addr;
 	u8	tstep_addr;
+	u8	short_bit;
 };
 
 static const struct regs_info palmas_regs_info[] = {
@@ -38,6 +40,7 @@ static const struct regs_info palmas_regs_info[] = {
 		.vsel_addr	= PALMAS_SMPS12_VOLTAGE,
 		.ctrl_addr	= PALMAS_SMPS12_CTRL,
 		.tstep_addr	= PALMAS_SMPS12_TSTEP,
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS12,
 	},
 	{
 		.name		= "SMPS123",
@@ -49,12 +52,14 @@ static const struct regs_info palmas_regs_info[] = {
 		.name		= "SMPS3",
 		.vsel_addr	= PALMAS_SMPS3_VOLTAGE,
 		.ctrl_addr	= PALMAS_SMPS3_CTRL,
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS3,
 	},
 	{
 		.name		= "SMPS45",
 		.vsel_addr	= PALMAS_SMPS45_VOLTAGE,
 		.ctrl_addr	= PALMAS_SMPS45_CTRL,
 		.tstep_addr	= PALMAS_SMPS45_TSTEP,
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS45,
 	},
 	{
 		.name		= "SMPS457",
@@ -67,80 +72,96 @@ static const struct regs_info palmas_regs_info[] = {
 		.vsel_addr	= PALMAS_SMPS6_VOLTAGE,
 		.ctrl_addr	= PALMAS_SMPS6_CTRL,
 		.tstep_addr	= PALMAS_SMPS6_TSTEP,
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS6,
 	},
 	{
 		.name		= "SMPS7",
 		.vsel_addr	= PALMAS_SMPS7_VOLTAGE,
 		.ctrl_addr	= PALMAS_SMPS7_CTRL,
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS7,
 	},
 	{
 		.name		= "SMPS8",
 		.vsel_addr	= PALMAS_SMPS8_VOLTAGE,
 		.ctrl_addr	= PALMAS_SMPS8_CTRL,
 		.tstep_addr	= PALMAS_SMPS8_TSTEP,
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS8,
 	},
 	{
 		.name		= "SMPS9",
 		.vsel_addr	= PALMAS_SMPS9_VOLTAGE,
 		.ctrl_addr	= PALMAS_SMPS9_CTRL,
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS9,
 	},
 	{
 		.name		= "SMPS10",
+		.short_bit	= PALMAS_SMPS_SHORT_STATUS_SMPS10,
 	},
 	{
 		.name		= "LDO1",
 		.vsel_addr	= PALMAS_LDO1_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO1_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO1,
 	},
 	{
 		.name		= "LDO2",
 		.vsel_addr	= PALMAS_LDO2_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO2_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO2,
 	},
 	{
 		.name		= "LDO3",
 		.vsel_addr	= PALMAS_LDO3_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO3_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO3,
 	},
 	{
 		.name		= "LDO4",
 		.vsel_addr	= PALMAS_LDO4_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO4_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO4,
 	},
 	{
 		.name		= "LDO5",
 		.vsel_addr	= PALMAS_LDO5_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO5_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO5,
 	},
 	{
 		.name		= "LDO6",
 		.vsel_addr	= PALMAS_LDO6_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO6_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO6,
 	},
 	{
 		.name		= "LDO7",
 		.vsel_addr	= PALMAS_LDO7_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO7_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO7,
 	},
 	{
 		.name		= "LDO8",
 		.vsel_addr	= PALMAS_LDO8_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO8_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS1_LDO8,
 	},
 	{
 		.name		= "LDO9",
 		.vsel_addr	= PALMAS_LDO9_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDO9_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS2_LDO9,
 	},
 	{
 		.name		= "LDOLN",
 		.vsel_addr	= PALMAS_LDOLN_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDOLN_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS2_LDOLN,
 	},
 	{
 		.name		= "LDOUSB",
 		.vsel_addr	= PALMAS_LDOUSB_VOLTAGE,
 		.ctrl_addr	= PALMAS_LDOUSB_CTRL,
+		.short_bit	= PALMAS_LDO_SHORT_STATUS2_LDOUSB,
 	},
 };
 
@@ -708,6 +729,51 @@ static int palmas_ldo_init(struct palmas *palmas, int id,
 	return 0;
 }
 
+static irqreturn_t palmas_regulator_short_handler(int irq, void *_pmic)
+{
+	struct palmas_pmic *pmic = _pmic;
+	u32 smps = 0, ldo1 = 0, ldo2 = 0;
+	int i;
+
+	palmas_smps_read(pmic->palmas, PALMAS_SMPS_SHORT_STATUS, &smps);
+	if (smps) {
+		for (i = PALMAS_REG_SMPS12; i< PALMAS_REG_SMPS10; i++) {
+			if (smps & palmas_regs_info[i].short_bit)
+				dev_info(pmic->dev,
+					"short detected in regulator %s\n",
+					palmas_regs_info[i].name);
+		}
+	}
+	palmas_ldo_read(pmic->palmas, PALMAS_LDO_SHORT_STATUS1, &ldo1);
+	if (ldo1) {
+		for (i = PALMAS_REG_LDO1; i< PALMAS_REG_LDO8; i++) {
+			if (ldo1 & palmas_regs_info[i].short_bit)
+				dev_info(pmic->dev,
+					"short detected in regulator %s\n",
+					palmas_regs_info[i].name);
+		}
+
+	}
+	palmas_ldo_read(pmic->palmas, PALMAS_LDO_SHORT_STATUS2, &ldo2);
+	if (ldo2) {
+		for (i = PALMAS_REG_LDO9; i< PALMAS_REG_LDOUSB; i++) {
+			if (ldo2 & palmas_regs_info[i].short_bit)
+				dev_info(pmic->dev,
+					"short detected in regulator %s\n",
+					palmas_regs_info[i].name);
+		}
+		/*
+		 * VANA shorts are indicated by this IRQ as well but VANA
+		 * is not a controllable regulator so doesnt have info above
+		 */
+		if (ldo2 & PALMAS_LDO_SHORT_STATUS2_LDOVANA)
+			dev_info(pmic->dev,
+				"short detected in regulator VANA\n");
+	}
+
+	return IRQ_HANDLED;
+}
+
 static struct of_regulator_match palmas_matches[] = {
 	{ .name = "smps12", },
 	{ .name = "smps123", },
@@ -799,7 +865,6 @@ static void __devinit palmas_dt_to_pdata(struct device *dev,
 		pdata->ldo6_vibrator = prop;
 }
 
-
 static __devinit int palmas_probe(struct platform_device *pdev)
 {
 	struct palmas *palmas = dev_get_drvdata(pdev->dev.parent);
@@ -809,7 +874,7 @@ static __devinit int palmas_probe(struct platform_device *pdev)
 	struct regulator_config config = { };
 	struct palmas_pmic *pmic;
 	struct palmas_reg_init *reg_init;
-	int id = 0, ret;
+	int id = 0, irq, ret;
 	unsigned int addr, reg;
 
 	if(node && !pdata) {
@@ -829,6 +894,14 @@ static __devinit int palmas_probe(struct platform_device *pdev)
 	pmic->palmas = palmas;
 	palmas->pmic = pmic;
 	platform_set_drvdata(pdev, pmic);
+
+	irq = platform_get_irq_byname(pdev, "SHORT");
+	ret = request_threaded_irq(irq, NULL, palmas_regulator_short_handler,
+		0, "palmas_short", pmic);
+	if (ret < 0) {
+		dev_info(&pdev->dev,
+			"could not request irq, no SHORT debug: %d\n", ret);
+	}
 
 	ret = palmas_smps_read(palmas, PALMAS_SMPS_CTRL, &reg);
 	if (ret)
