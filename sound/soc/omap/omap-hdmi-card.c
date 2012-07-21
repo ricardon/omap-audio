@@ -26,6 +26,7 @@
 #include <sound/soc.h>
 #include <asm/mach-types.h>
 #include <video/omapdss.h>
+#include <linux/of.h>
 
 #define DRV_NAME "omap-hdmi-audio"
 
@@ -70,10 +71,18 @@ static int __devexit omap_hdmi_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct of_device_id omap_hdmi_of_match[] = {
+	{.compatible = "ti,omap-hdmi-audio", },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, omap_hdmi_of_match);
+
+
 static struct platform_driver omap_hdmi_driver = {
 	.driver = {
 		.name = DRV_NAME,
 		.owner = THIS_MODULE,
+		.of_match_table = omap_hdmi_of_match,
 	},
 	.probe = omap_hdmi_probe,
 	.remove = __devexit_p(omap_hdmi_remove),
