@@ -42,8 +42,12 @@ static struct snd_soc_dai_driver omap_hdmi_codec_dai = {
 
 static __devinit int omap_hdmi_codec_probe(struct platform_device *pdev)
 {
-	return snd_soc_register_codec(&pdev->dev, &omap_hdmi_codec,
+	int r;
+	r = snd_soc_register_codec(&pdev->dev, &omap_hdmi_codec,
 			&omap_hdmi_codec_dai, 1);
+
+	printk(KERN_ERR "+++++++++++CODEC PROBE[%d]", r);
+	return r;
 }
 
 static __devexit int omap_hdmi_codec_remove(struct platform_device *pdev)
@@ -53,7 +57,7 @@ static __devexit int omap_hdmi_codec_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id omap_hdmi_codec_of_match[] = {
-	{.compatible = "ti,omap-hdmi-audio", },
+	{.compatible = "ti,hdmi-audio-codec", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, omap_hdmi_codec_of_match);
