@@ -144,6 +144,11 @@
 				compatible = "ti,omap-hdmi-audio";
 			};
 
+			hdmi_audio_dai: hdmi_audio_dai {
+				compatible = "ti,omap-hdmi-audio-dai";
+				ti,hwmods = "dss_hdmi";
+			};
+
 			rfbi: rfbi {
 				compatible = "ti,omap4-rfbi";
 				ti,hwmods = "dss_rfbi";
