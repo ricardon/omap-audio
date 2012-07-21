@@ -20,6 +20,7 @@
  */
 #include <linux/module.h>
 #include <sound/soc.h>
+#include <linux/of.h>
 
 #define DRV_NAME "hdmi-audio-codec"
 
@@ -51,10 +52,17 @@ static __devexit int omap_hdmi_codec_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct of_device_id omap_hdmi_codec_of_match[] = {
+	{.compatible = "ti,omap-hdmi-audio", },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, omap_hdmi_codec_of_match);
+
 static struct platform_driver omap_hdmi_codec_driver = {
 	.driver		= {
 		.name	= DRV_NAME,
 		.owner	= THIS_MODULE,
+		.of_match_table =omap_hdmi_codec_of_match,
 	},
 
 	.probe		= omap_hdmi_codec_probe,
