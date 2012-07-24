@@ -22,6 +22,7 @@
  *   o Support TDM on PCM and I2S
  */
 
+#define DEBUG
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -812,6 +813,7 @@ static int soc_bind_dai_link(struct snd_soc_card *card, int num)
 
 	/* Find CPU DAI from registered DAIs*/
 	list_for_each_entry(cpu_dai, &dai_list, list) {
+		printk(KERN_ERR "binding:cpu_dai->name[%s]", cpu_dai->name);
 		if (dai_link->cpu_dai_of_node) {
 			if (cpu_dai->dev->of_node != dai_link->cpu_dai_of_node)
 				continue;
@@ -831,6 +833,7 @@ static int soc_bind_dai_link(struct snd_soc_card *card, int num)
 
 	/* Find CODEC from registered CODECs */
 	list_for_each_entry(codec, &codec_list, list) {
+		printk(KERN_ERR "binding:codec->name[%s]", codec->name);
 		if (dai_link->codec_of_node) {
 			if (codec->dev->of_node != dai_link->codec_of_node)
 				continue;
@@ -3487,7 +3490,7 @@ int snd_soc_register_dai(struct device *dev,
 	struct snd_soc_codec *codec;
 	struct snd_soc_dai *dai;
 
-	dev_dbg(dev, "dai register %s\n", dev_name(dev));
+	dev_dbg(dev, "daI Register %s\n", dev_name(dev));
 
 	dai = kzalloc(sizeof(struct snd_soc_dai), GFP_KERNEL);
 	if (dai == NULL)
@@ -3495,6 +3498,7 @@ int snd_soc_register_dai(struct device *dev,
 
 	/* create DAI component name */
 	dai->name = fmt_single_name(dev, &dai->id);
+	printk(KERN_ERR "++dai name[%s]", dai->name);
 	if (dai->name == NULL) {
 		kfree(dai);
 		return -ENOMEM;
@@ -3578,6 +3582,7 @@ int snd_soc_register_dais(struct device *dev,
 
 		/* create DAI component name */
 		dai->name = fmt_multiple_name(dev, &dai_drv[i]);
+		printk(KERN_ERR "++dai name[%s]", dai->name);
 		if (dai->name == NULL) {
 			kfree(dai);
 			ret = -EINVAL;
@@ -3758,6 +3763,7 @@ int snd_soc_register_codec(struct device *dev,
 
 	/* create CODEC component name */
 	codec->name = fmt_single_name(dev, &codec->id);
+	printk(KERN_ERR "codec name [%s]", codec->name);
 	if (codec->name == NULL) {
 		kfree(codec);
 		return -ENOMEM;

@@ -52,6 +52,7 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 	struct snd_soc_card *card = &snd_soc_omap_hdmi;
 	int ret;
 
+	printk(KERN_ERR "~~~~~~~~~~~~~ENTER CARD PROBE[%s]", pdev->name);
 	card->dev = &pdev->dev;
 
 	ret = snd_soc_register_card(card);
@@ -60,6 +61,8 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 		card->dev = NULL;
 		return ret;
 	}
+
+	printk(KERN_ERR" ++++++++++++++++++++CARD PROBE[0]");
 	return 0;
 }
 

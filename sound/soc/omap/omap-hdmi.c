@@ -321,6 +321,10 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 	dev_set_drvdata(&pdev->dev, hdmi_data);
 	ret = snd_soc_register_dai(&pdev->dev, &omap_hdmi_dai);
 
+
+	printk(KERN_ERR" ++++++++++++++++++++DAI PROBE[%d][%s]",
+		ret, pdev->name);
+
 	return ret;
 }
 

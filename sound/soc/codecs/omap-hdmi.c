@@ -46,7 +46,8 @@ static __devinit int omap_hdmi_codec_probe(struct platform_device *pdev)
 	r = snd_soc_register_codec(&pdev->dev, &omap_hdmi_codec,
 			&omap_hdmi_codec_dai, 1);
 
-	printk(KERN_ERR "+++++++++++CODEC PROBE[%d]", r);
+	printk(KERN_ERR "+++++++++++CODEC PROBE[%d][%s]",
+		r, pdev->name);
 	return r;
 }
 
