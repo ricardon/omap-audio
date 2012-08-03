@@ -13,3 +13,4 @@ obj-$(CONFIG_ARCH_INTEGRATOR)	+= versatile/
 
 # Chip specific
 obj-$(CONFIG_COMMON_CLK_WM831X) += clk-wm831x.o
+obj-$(CONFIG_CLK_PALMAS) += clk-palmas.o
