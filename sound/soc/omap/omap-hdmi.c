@@ -33,6 +33,7 @@
 #include <sound/asound.h>
 #include <sound/asoundef.h>
 #include <video/omapdss.h>
+#include <linux/of.h>
 
 #include <plat/dma.h>
 #include "omap-pcm.h"
@@ -338,10 +339,17 @@ static int __devexit omap_hdmi_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct of_device_id hdmi_dai_of_match[] = {
+	{.compatible = "ti,omap4-hdmi-audio", },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, hdmi_dai_of_match);
+
 static struct platform_driver hdmi_dai_driver = {
 	.driver = {
 		.name = DRV_NAME,
 		.owner = THIS_MODULE,
+		.of_match_table = hdmi_dai_of_match,
 	},
 	.probe = omap_hdmi_probe,
 	.remove = __devexit_p(omap_hdmi_remove),
