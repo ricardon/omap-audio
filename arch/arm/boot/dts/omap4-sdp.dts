@@ -70,6 +70,24 @@
 			gpios = <&gpio5 11 0>; /* 139 */
 		};
 	};
+
+	sound_hdmi {
+		compatible = "ti,omap-hdmi-audio";
+		ti,model = "OMAP4HDMI";
+
+		ti,cpu_dai = <&hdmi_audio>;
+		ti,audio-codec = <&sound_hdmi_codec>;
+	};
+
+	/* TODO: find a better place for this codec. Perhaps it can be a child
+	 * of the level shifter or it can be added to  hdmi_audio. If it does
+	 * not represent real hardware maybe just create the device from the
+	 * machine driver.
+	 */
+	sound_hdmi_codec: sound_hdmi_codec {
+		compatible = "ti,hdmi-audio-codec";
+	};
+
 };
 
 &i2c1 {
@@ -228,6 +246,5 @@
 		hdmi-monitor {
 			compatible = "ti,hdmi_panel";
 		};
-
 	};
 };
