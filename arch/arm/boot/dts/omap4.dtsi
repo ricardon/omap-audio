@@ -140,6 +140,15 @@
 				ti,hwmods = "dss_hdmi";
 			};
 
+			/* TODO: Could not reuse the 'hdmi' node for tue audio driver.
+			 * Ideally, the node should be reusable if the DT is to describe
+			 * hardware rather than logic Linux devices
+			 */
+			hdmi_audio: hdmi_audio {
+				compatible = "ti,omap4-hdmi-audio";
+				ti,hwmods = "dss_hdmi";
+			};
+
 			rfbi: rfbi {
 				compatible = "ti,omap4-rfbi";
 				ti,hwmods = "dss_rfbi";
