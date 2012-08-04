@@ -26,6 +26,7 @@
 #include <sound/soc.h>
 #include <asm/mach-types.h>
 #include <video/omapdss.h>
+#include <linux/of.h>
 
 #define DRV_NAME "omap-hdmi-audio"
 
@@ -33,8 +34,10 @@ static struct snd_soc_dai_link omap_hdmi_dai = {
 	.name = "HDMI",
 	.stream_name = "HDMI",
 	.cpu_dai_name = "omap-hdmi-audio-dai",
+	.cpu_dai_of_node = NULL,
 	.platform_name = "omap-pcm-audio",
 	.codec_name = "hdmi-audio-codec",
+	.codec_of_node = NULL,
 	.codec_dai_name = "omap-hdmi-hifi",
 };
 
@@ -48,9 +51,36 @@ static struct snd_soc_card snd_soc_omap_hdmi = {
 static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 {
 	struct snd_soc_card *card = &snd_soc_omap_hdmi;
+	struct device_node *node = pdev->dev.of_node;
 	int ret;
 
 	card->dev = &pdev->dev;
+
+	/* for DT boot */
+	if (node) {
+		struct device_node *dai_node;
+
+		if (snd_soc_of_parse_card_name(card, "ti,model")) {
+			dev_err(&pdev->dev, "Card name is not provided\n");
+			return -ENODEV;
+		}
+
+		dai_node = of_parse_phandle(node, "ti,cpu_dai", 0);
+		if (!dai_node) {
+			dev_err(&pdev->dev, "CPU DAI node is not provided\n");
+			return -EINVAL;
+		}
+		omap_hdmi_dai.cpu_dai_name = NULL;
+		omap_hdmi_dai.cpu_dai_of_node = dai_node;
+
+		dai_node = of_parse_phandle(node, "ti,audio-codec", 0);
+		if (!dai_node) {
+			dev_err(&pdev->dev, "codec node is not provided\n");
+			return -EINVAL;
+		}
+		omap_hdmi_dai.codec_name = NULL;
+		omap_hdmi_dai.codec_of_node = dai_node;
+	}
 
 	ret = snd_soc_register_card(card);
 	if (ret) {
@@ -58,6 +88,7 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 		card->dev = NULL;
 		return ret;
 	}
+
 	return 0;
 }
 
@@ -70,10 +101,18 @@ static int __devexit omap_hdmi_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct of_device_id omap_hdmi_of_match[] = {
+	{.compatible = "ti,omap-hdmi-audio", },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, omap_hdmi_of_match);
+
+
 static struct platform_driver omap_hdmi_driver = {
 	.driver = {
 		.name = DRV_NAME,
 		.owner = THIS_MODULE,
+		.of_match_table = omap_hdmi_of_match,
 	},
 	.probe = omap_hdmi_probe,
 	.remove = __devexit_p(omap_hdmi_remove),
