@@ -393,6 +393,20 @@ static int dss_driver_remove(struct device *dev)
 	return 0;
 }
 
+int omap_dss_register_notifier(struct omap_dss_driver *dssdriver,
+			       struct notifier_block *n)
+{
+	return blocking_notifier_chain_register(&dssdriver->event_notifiers, n);
+}
+EXPORT_SYMBOL(omap_dss_register_notifier);
+
+int omap_dss_unregister_notifier(struct omap_dss_driver *dssdriver,
+			       struct notifier_block *n)
+{
+	return blocking_notifier_chain_unregister(&dssdriver->event_notifiers, n);
+}
+EXPORT_SYMBOL(omap_dss_unregister_notifier);
+
 int omap_dss_register_driver(struct omap_dss_driver *dssdriver)
 {
 	dssdriver->driver.bus = &dss_bus_type;
@@ -406,6 +420,8 @@ int omap_dss_register_driver(struct omap_dss_driver *dssdriver)
 			omapdss_default_get_recommended_bpp;
 	if (dssdriver->get_timings == NULL)
 		dssdriver->get_timings = omapdss_default_get_timings;
+
+	BLOCKING_INIT_NOTIFIER_HEAD(&dssdriver->event_notifiers);
 
 	return driver_register(&dssdriver->driver);
 }

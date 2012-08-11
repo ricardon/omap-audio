@@ -21,6 +21,7 @@
 #include <linux/list.h>
 #include <linux/kobject.h>
 #include <linux/device.h>
+#include <linux/notifier.h>
 
 #define DISPC_IRQ_FRAMEDONE		(1 << 0)
 #define DISPC_IRQ_VSYNC			(1 << 1)
@@ -678,6 +679,8 @@ struct omap_dss_driver {
 	int (*audio_start)(struct omap_dss_device *dssdev);
 	void (*audio_stop)(struct omap_dss_device *dssdev);
 
+	struct blocking_notifier_head event_notifiers;
+
 };
 
 int omap_dss_register_driver(struct omap_dss_driver *);
@@ -689,6 +692,11 @@ void omap_dss_put_device(struct omap_dss_device *dssdev);
 struct omap_dss_device *omap_dss_get_next_device(struct omap_dss_device *from);
 struct omap_dss_device *omap_dss_find_device(void *data,
 		int (*match)(struct omap_dss_device *dssdev, void *data));
+
+int omap_dss_register_notifier(struct omap_dss_driver *dssdriver,
+			       struct notifier_block *n);
+int omap_dss_unregister_notifier(struct omap_dss_driver *dssdriver,
+			       struct notifier_block *n);
 
 int omap_dss_start_device(struct omap_dss_device *dssdev);
 void omap_dss_stop_device(struct omap_dss_device *dssdev);
