@@ -46,6 +46,7 @@ struct hdmi_priv {
 	struct snd_aes_iec958 iec;
 	struct snd_cea_861_aud_if cea;
 	struct omap_dss_device *dssdev;
+	struct notifier_block events_notifier;
 };
 
 static int omap_hdmi_dai_startup(struct snd_pcm_substream *substream,
@@ -242,6 +243,30 @@ static void omap_hdmi_dai_shutdown(struct snd_pcm_substream *substream,
 	priv->dssdev->driver->audio_disable(priv->dssdev);
 }
 
+
+int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
+				       unsigned long v, void *ptr)
+{
+	switch (v) {
+	case OMAP_DSS_DISPLAY_DISABLED:
+		printk(KERN_ERR "DISABLED");
+		gpio_set_value(50, 0);
+		break;
+	case OMAP_DSS_DISPLAY_ACTIVE:
+		printk(KERN_ERR "ACTIVE");
+		gpio_set_value(50, 1);
+		break;
+	case OMAP_DSS_DISPLAY_SUSPENDED:
+		printk(KERN_ERR "sSUSPENDED");
+		gpio_set_value(50, 0);
+		break;
+	default:
+		printk(KERN_ERR "sUNKNOWN");
+		gpio_set_value(50, 0);
+	}
+	return 0;
+}
+
 static const struct snd_soc_dai_ops omap_hdmi_dai_ops = {
 	.startup	= omap_hdmi_dai_startup,
 	.hw_params	= omap_hdmi_dai_hw_params,
@@ -317,6 +342,16 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
+	hdmi_data->events_notifier.notifier_call = omap_hdmi_dai_notifier_call;
+	ret = omap_dss_register_notifier(hdmi_data->dssdev->driver,
+					 &hdmi_data->events_notifier);
+
+	if (ret) {
+		dev_err(&pdev->dev, "could not register event notifier\n");
+		omap_dss_put_device(hdmi_data->dssdev);
+		return -EPERM;
+	}
+
 	dev_set_drvdata(&pdev->dev, hdmi_data);
 	ret = snd_soc_register_dai(&pdev->dev, &omap_hdmi_dai);
 
@@ -334,7 +369,12 @@ static int __devexit omap_hdmi_remove(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
+	omap_dss_unregister_notifier(hdmi_data->dssdev->driver,
+				     &hdmi_data->events_notifier);
+
+
 	omap_dss_put_device(hdmi_data->dssdev);
+
 	return 0;
 }
 
