@@ -236,6 +236,9 @@ static int hdmi_panel_enable(struct omap_dss_device *dssdev)
 
 	dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
 
+	blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
+				OMAP_DSS_DISPLAY_ACTIVE, dssdev);
+
 err:
 	mutex_unlock(&hdmi.lock);
 
@@ -247,12 +250,17 @@ static void hdmi_panel_disable(struct omap_dss_device *dssdev)
 	mutex_lock(&hdmi.lock);
 
 	if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE) {
+#if 0
 		/*
 		 * TODO: notify audio users that the display was disabled. For
 		 * now, disable audio locally to not break our audio state
 		 * machine.
 		 */
 		hdmi_panel_audio_disable(dssdev);
+#else
+		blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
+					OMAP_DSS_DISPLAY_DISABLED, dssdev);
+#endif
 		omapdss_hdmi_display_disable(dssdev);
 	}
 
@@ -272,11 +280,16 @@ static int hdmi_panel_suspend(struct omap_dss_device *dssdev)
 		goto err;
 	}
 
+#if 0
 	/*
 	 * TODO: notify audio users that the display was suspended. For now,
 	 * disable audio locally to not break our audio state machine.
 	 */
 	hdmi_panel_audio_disable(dssdev);
+#else
+	blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
+				OMAP_DSS_DISPLAY_SUSPENDED, dssdev);
+#endif
 
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	omapdss_hdmi_display_disable(dssdev);
@@ -303,7 +316,13 @@ static int hdmi_panel_resume(struct omap_dss_device *dssdev)
 		DSSERR("failed to power on\n");
 		goto err;
 	}
+#if 0
 	/* TODO: notify audio users that the panel resumed. */
+#else
+	blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
+				OMAP_DSS_DISPLAY_ACTIVE, dssdev);
+
+#endif
 
 	dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
 
