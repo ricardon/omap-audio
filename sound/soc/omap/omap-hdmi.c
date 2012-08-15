@@ -33,6 +33,7 @@
 #include <sound/asound.h>
 #include <sound/asoundef.h>
 #include <video/omapdss.h>
+#include <linux/gpio.h>
 
 #include <plat/dma.h>
 #include "omap-pcm.h"
@@ -352,6 +353,9 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 		return -EPERM;
 	}
 
+	gpio_request(50, NULL);
+	gpio_direction_output(50, 1);
+
 	dev_set_drvdata(&pdev->dev, hdmi_data);
 	ret = snd_soc_register_dai(&pdev->dev, &omap_hdmi_dai);
 
@@ -361,6 +365,8 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 static int __devexit omap_hdmi_remove(struct platform_device *pdev)
 {
 	struct hdmi_priv *hdmi_data = dev_get_drvdata(&pdev->dev);
+
+	gpio_free(50);
 
 	snd_soc_unregister_dai(&pdev->dev);
 
