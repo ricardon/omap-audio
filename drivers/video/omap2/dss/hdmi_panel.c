@@ -35,6 +35,7 @@ static struct {
 #if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
 	/* This protects the audio ops, specifically. */
 	spinlock_t audio_lock;
+	struct omap_dss_audio *last_audio_cfg;
 #endif
 } hdmi;
 
@@ -178,6 +179,8 @@ static int hdmi_panel_audio_config(struct omap_dss_device *dssdev,
 
 	if (!r)
 		dssdev->audio_state = OMAP_DSS_AUDIO_CONFIGURED;
+
+	hdmi.last_audio_cfg = audio;
 
 err:
 	spin_unlock_irqrestore(&hdmi.audio_lock, flags);
@@ -345,13 +348,15 @@ static void hdmi_get_timings(struct omap_dss_device *dssdev,
 static void hdmi_set_timings(struct omap_dss_device *dssdev,
 			struct omap_video_timings *timings)
 {
+	enum omap_dss_audio_state last_state = dssdev->audio_state;
+
 	DSSDBG("hdmi_set_timings\n");
 
 	mutex_lock(&hdmi.lock);
 
 	/*
-	 * TODO: notify audio users that there was a timings change. For
-	 * now, disable audio locally to not break our audio state machine.
+	 * TODO: decide to whether notify the users or reconfigure audio internally.
+	 * If done internally, we need to store the configuration locally.
 	 */
 	hdmi_panel_audio_disable(dssdev);
 
@@ -359,6 +364,28 @@ static void hdmi_set_timings(struct omap_dss_device *dssdev,
 	omapdss_hdmi_display_set_timing(dssdev);
 
 	mutex_unlock(&hdmi.lock);
+
+	/* handle the change in timings internally */
+	/* TODO: maybe create helper functions to do the stuff and have wrapper
+	 * functions to hold the required locks?
+	 */
+	 /* TODO: handle errors */
+	switch (last_state) {
+	case OMAP_DSS_AUDIO_DISABLED:
+		break;
+	case OMAP_DSS_AUDIO_CONFIGURED:
+		hdmi_panel_audio_config(dssdev, hdmi.last_audio_cfg);
+		break;
+	case OMAP_DSS_AUDIO_ENABLED:
+		hdmi_panel_audio_config(dssdev, hdmi.last_audio_cfg);
+		hdmi_panel_audio_enable(dssdev);
+		break;
+	case OMAP_DSS_AUDIO_PLAYING:
+		hdmi_panel_audio_config(dssdev, hdmi.last_audio_cfg);
+		hdmi_panel_audio_enable(dssdev);
+		hdmi_panel_audio_start(dssdev);
+		break;
+	}
 }
 
 static int hdmi_check_timings(struct omap_dss_device *dssdev,
