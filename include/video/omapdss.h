@@ -612,6 +612,7 @@ struct omap_dss_hdmi_data
 struct omap_dss_audio {
 	struct snd_aes_iec958 *iec;
 	struct snd_cea_861_aud_if *cea;
+	void *private_data;
 };
 
 struct omap_dss_driver {
