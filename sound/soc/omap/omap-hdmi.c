@@ -206,6 +206,7 @@ static int omap_hdmi_dai_hw_params(struct snd_pcm_substream *substream,
 
 	priv->dss_audio.iec = iec;
 	priv->dss_audio.cea = cea;
+	priv->dss_audio.private_data = substream;
 
 	err = priv->dssdev->driver->audio_config(priv->dssdev,
 						 &priv->dss_audio);
@@ -248,9 +249,23 @@ static void omap_hdmi_dai_shutdown(struct snd_pcm_substream *substream,
 int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
 				       unsigned long v, void *ptr)
 {
+	struct omap_dss_audio *dss_audio = (struct omap_dss_audio *)ptr;
+	struct snd_pcm_substream *substream;
+
+	 /*
+	  * Audio has not been configured yet. Then, we are sure we are not
+	  * playing.
+	  */
+	if (!dss_audio)
+		return NOTIFY_DONE;
+
+	substream = (struct snd_pcm_substream *)dss_audio->private_data;
+
 	switch (v) {
 	case OMAP_DSS_DISPLAY_DISABLED:
 		printk(KERN_ERR "DISABLED");
+		if (substream) /* stop only is the substream is valid */
+			snd_pcm_stop(substream, SNDRV_PCM_STATE_DISCONNECTED);
 		gpio_set_value(50, 0);
 		break;
 	case OMAP_DSS_DISPLAY_ACTIVE:
@@ -259,13 +274,15 @@ int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
 		break;
 	case OMAP_DSS_DISPLAY_SUSPENDED:
 		printk(KERN_ERR "sSUSPENDED");
+		if (substream) /* stop only is the substream is valid */
+			snd_pcm_stop(substream, SNDRV_PCM_STATE_DISCONNECTED);
 		gpio_set_value(50, 0);
 		break;
 	default:
 		printk(KERN_ERR "sUNKNOWN");
 		gpio_set_value(50, 0);
 	}
-	return 0;
+	return NOTIFY_OK;
 }
 
 static const struct snd_soc_dai_ops omap_hdmi_dai_ops = {
