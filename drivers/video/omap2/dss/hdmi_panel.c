@@ -240,7 +240,7 @@ static int hdmi_panel_enable(struct omap_dss_device *dssdev)
 	dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
 
 	blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
-				OMAP_DSS_DISPLAY_ACTIVE, dssdev);
+				OMAP_DSS_DISPLAY_ACTIVE, hdmi.last_audio_cfg);
 
 err:
 	mutex_unlock(&hdmi.lock);
@@ -262,7 +262,7 @@ static void hdmi_panel_disable(struct omap_dss_device *dssdev)
 		hdmi_panel_audio_disable(dssdev);
 #else
 		blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
-					OMAP_DSS_DISPLAY_DISABLED, dssdev);
+					OMAP_DSS_DISPLAY_DISABLED, hdmi.last_audio_cfg);
 #endif
 		omapdss_hdmi_display_disable(dssdev);
 	}
@@ -291,7 +291,7 @@ static int hdmi_panel_suspend(struct omap_dss_device *dssdev)
 	hdmi_panel_audio_disable(dssdev);
 #else
 	blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
-				OMAP_DSS_DISPLAY_SUSPENDED, dssdev);
+				OMAP_DSS_DISPLAY_SUSPENDED, hdmi.last_audio_cfg);
 #endif
 
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
@@ -323,7 +323,7 @@ static int hdmi_panel_resume(struct omap_dss_device *dssdev)
 	/* TODO: notify audio users that the panel resumed. */
 #else
 	blocking_notifier_call_chain(&dssdev->driver->event_notifiers,
-				OMAP_DSS_DISPLAY_ACTIVE, dssdev);
+				OMAP_DSS_DISPLAY_ACTIVE, hdmi.last_audio_cfg);
 
 #endif
 
