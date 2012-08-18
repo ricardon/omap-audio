@@ -25,7 +25,25 @@
 
 #define DRV_NAME "hdmi-audio-codec"
 
-static struct snd_soc_codec_driver omap_hdmi_codec;
+struct hdmi_priv {
+	struct omap_dss_device *dssdev;
+	struct notifier_block events_notifier;
+	struct snd_soc_jack jack;
+};
+
+static struct snd_soc_dai_driver omap_hdmi_codec_dai = {
+	.name = "omap-hdmi-hifi",
+	.playback = {
+		.channels_min = 2,
+		.channels_max = 8,
+		.rates = SNDRV_PCM_RATE_32000 |
+			SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000 |
+			SNDRV_PCM_RATE_88200 | SNDRV_PCM_RATE_96000 |
+			SNDRV_PCM_RATE_176400 | SNDRV_PCM_RATE_192000,
+		.formats = SNDRV_PCM_FMTBIT_S16_LE |
+			SNDRV_PCM_FMTBIT_S24_LE,
+	},
+};
 
 int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
 				       unsigned long v, void *ptr)
@@ -67,31 +85,12 @@ int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
 	return NOTIFY_OK;
 }
 
-
-struct hdmi_priv {
-	struct omap_dss_device *dssdev;
-	struct notifier_block events_notifier;
-	struct snd_soc_jack jack;
-};
-
-static struct snd_soc_dai_driver omap_hdmi_codec_dai = {
-	.name = "omap-hdmi-hifi",
-	.playback = {
-		.channels_min = 2,
-		.channels_max = 8,
-		.rates = SNDRV_PCM_RATE_32000 |
-			SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000 |
-			SNDRV_PCM_RATE_88200 | SNDRV_PCM_RATE_96000 |
-			SNDRV_PCM_RATE_176400 | SNDRV_PCM_RATE_192000,
-		.formats = SNDRV_PCM_FMTBIT_S16_LE |
-			SNDRV_PCM_FMTBIT_S24_LE,
-	},
-};
-
-static __devinit int omap_hdmi_codec_probe(struct platform_device *pdev)
+int static omap_hdmi_probe(struct snd_soc_codec *codec)
 {
 	struct hdmi_priv *hdmi_data;
 	bool hdmi_dev_found = false;
+	struct platform_device *pdev = container_of(codec->dev,
+						   struct platform_device, dev);
 	int ret;
 	/*
 	 * TODO: We assume that there is only one DSS HDMI device. Future
@@ -130,6 +129,16 @@ static __devinit int omap_hdmi_codec_probe(struct platform_device *pdev)
 	gpio_direction_output(50, 1);
 
 	dev_set_drvdata(&pdev->dev, hdmi_data);
+
+	return 0;
+}
+
+static struct snd_soc_codec_driver omap_hdmi_codec = {
+	.probe = omap_hdmi_probe,
+};
+
+static __devinit int omap_hdmi_codec_probe(struct platform_device *pdev)
+{
 	return snd_soc_register_codec(&pdev->dev, &omap_hdmi_codec,
 			&omap_hdmi_codec_dai, 1);
 }
