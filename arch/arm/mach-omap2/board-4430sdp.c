@@ -816,6 +816,8 @@ static void __init omap_4430sdp_display_init(void)
 	omap_mux_init_gpio(HDMI_GPIO_LS_OE, OMAP_PIN_OUTPUT);
 	omap_mux_init_gpio(HDMI_GPIO_CT_CP_HPD, OMAP_PIN_OUTPUT);
 	omap_mux_init_gpio(HDMI_GPIO_HPD, OMAP_PIN_INPUT_PULLDOWN);
+
+	omap_mux_init_signal("sys_nirq2", OMAP_MUX_MODE0 | OMAP_PIN_INPUT);
 }
 
 #ifdef CONFIG_OMAP_MUX
