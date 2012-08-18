@@ -33,7 +33,6 @@
 #include <sound/asound.h>
 #include <sound/asoundef.h>
 #include <video/omapdss.h>
-#include <linux/gpio.h>
 
 #include <plat/dma.h>
 #include "omap-pcm.h"
@@ -47,7 +46,7 @@ struct hdmi_priv {
 	struct snd_aes_iec958 iec;
 	struct snd_cea_861_aud_if cea;
 	struct omap_dss_device *dssdev;
-	struct notifier_block events_notifier;
+	struct snd_soc_jack jack;
 };
 
 static int omap_hdmi_dai_startup(struct snd_pcm_substream *substream,
@@ -245,46 +244,6 @@ static void omap_hdmi_dai_shutdown(struct snd_pcm_substream *substream,
 	priv->dssdev->driver->audio_disable(priv->dssdev);
 }
 
-
-int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
-				       unsigned long v, void *ptr)
-{
-	struct omap_dss_audio *dss_audio = (struct omap_dss_audio *)ptr;
-	struct snd_pcm_substream *substream;
-
-	 /*
-	  * Audio has not been configured yet. Then, we are sure we are not
-	  * playing.
-	  */
-	if (!dss_audio)
-		return NOTIFY_DONE;
-
-	substream = (struct snd_pcm_substream *)dss_audio->private_data;
-
-	switch (v) {
-	case OMAP_DSS_DISPLAY_DISABLED:
-		printk(KERN_ERR "DISABLED");
-		if (substream) /* stop only is the substream is valid */
-			snd_pcm_stop(substream, SNDRV_PCM_STATE_DISCONNECTED);
-		gpio_set_value(50, 0);
-		break;
-	case OMAP_DSS_DISPLAY_ACTIVE:
-		printk(KERN_ERR "ACTIVE");
-		gpio_set_value(50, 1);
-		break;
-	case OMAP_DSS_DISPLAY_SUSPENDED:
-		printk(KERN_ERR "sSUSPENDED");
-		if (substream) /* stop only is the substream is valid */
-			snd_pcm_stop(substream, SNDRV_PCM_STATE_DISCONNECTED);
-		gpio_set_value(50, 0);
-		break;
-	default:
-		printk(KERN_ERR "sUNKNOWN");
-		gpio_set_value(50, 0);
-	}
-	return NOTIFY_OK;
-}
-
 static const struct snd_soc_dai_ops omap_hdmi_dai_ops = {
 	.startup	= omap_hdmi_dai_startup,
 	.hw_params	= omap_hdmi_dai_hw_params,
@@ -360,19 +319,6 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
-	hdmi_data->events_notifier.notifier_call = omap_hdmi_dai_notifier_call;
-	ret = omap_dss_register_notifier(hdmi_data->dssdev->driver,
-					 &hdmi_data->events_notifier);
-
-	if (ret) {
-		dev_err(&pdev->dev, "could not register event notifier\n");
-		omap_dss_put_device(hdmi_data->dssdev);
-		return -EPERM;
-	}
-
-	gpio_request(50, NULL);
-	gpio_direction_output(50, 1);
-
 	dev_set_drvdata(&pdev->dev, hdmi_data);
 	ret = snd_soc_register_dai(&pdev->dev, &omap_hdmi_dai);
 
@@ -383,18 +329,12 @@ static int __devexit omap_hdmi_remove(struct platform_device *pdev)
 {
 	struct hdmi_priv *hdmi_data = dev_get_drvdata(&pdev->dev);
 
-	gpio_free(50);
-
 	snd_soc_unregister_dai(&pdev->dev);
 
 	if (hdmi_data == NULL) {
 		dev_err(&pdev->dev, "cannot obtain HDMi data\n");
 		return -ENODEV;
 	}
-
-	omap_dss_unregister_notifier(hdmi_data->dssdev->driver,
-				     &hdmi_data->events_notifier);
-
 
 	omap_dss_put_device(hdmi_data->dssdev);
 
