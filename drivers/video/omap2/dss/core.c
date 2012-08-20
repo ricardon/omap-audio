@@ -450,6 +450,8 @@ static void omap_dss_dev_release(struct device *dev)
 	reset_device(dev, 0);
 }
 
+static int num_displays;
+
 int omap_dss_register_device(struct omap_dss_device *dssdev,
 		struct device *parent, int disp_num)
 {
@@ -459,12 +461,16 @@ int omap_dss_register_device(struct omap_dss_device *dssdev,
 	dssdev->dev.bus = &dss_bus_type;
 	dssdev->dev.parent = parent;
 	dssdev->dev.release = omap_dss_dev_release;
+	if (disp_num == -1)
+		disp_num = num_displays;
+	num_displays++;
 	dev_set_name(&dssdev->dev, "display%d", disp_num);
 	return device_register(&dssdev->dev);
 }
 
 void omap_dss_unregister_device(struct omap_dss_device *dssdev)
 {
+	num_displays--;
 	device_unregister(&dssdev->dev);
 }
 
