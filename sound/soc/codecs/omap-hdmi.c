@@ -22,6 +22,7 @@
 #include <sound/soc.h>
 #include <video/omapdss.h>
 #include <linux/gpio.h>
+#include <sound/jack.h>
 
 #define DRV_NAME "hdmi-audio-codec"
 
@@ -50,21 +51,38 @@ int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
 {
 	struct omap_dss_audio *dss_audio = (struct omap_dss_audio *)ptr;
 	struct snd_pcm_substream *substream;
+	struct hdmi_priv *priv = container_of(nb, struct hdmi_priv,
+					      events_notifier);
+	struct snd_soc_jack *jack = &priv->jack;
+	int jack_status;
 
-	 /*
-	  * Audio has not been configured yet. Then, we are sure we are not
-	  * playing.
-	  */
-	if (!dss_audio)
-		return NOTIFY_DONE;
 
-	substream = (struct snd_pcm_substream *)dss_audio->private_data;
+	switch(v) {
+	case OMAP_DSS_DISPLAY_DISABLED:
+	case OMAP_DSS_DISPLAY_SUSPENDED:
+		jack_status = 0;
+		break;
+	case OMAP_DSS_DISPLAY_ACTIVE:
+		jack_status = 1;
+		break;
+	default:
+		return NOTIFY_BAD;
+	}
+
+	snd_soc_jack_report(jack, jack_status, SND_JACK_HEADSET);
+
+#if 0
+	if (dss_audio)
+		substream = (struct snd_pcm_substream *)dss_audio->private_data;
+#endif
 
 	switch (v) {
 	case OMAP_DSS_DISPLAY_DISABLED:
 		printk(KERN_ERR "DISABLED");
+#if 0
 		if (substream) /* stop only is the substream is valid */
 			snd_pcm_stop(substream, SNDRV_PCM_STATE_DISCONNECTED);
+#endif
 		gpio_set_value(50, 0);
 		break;
 	case OMAP_DSS_DISPLAY_ACTIVE:
@@ -73,8 +91,10 @@ int static omap_hdmi_dai_notifier_call(struct notifier_block *nb,
 		break;
 	case OMAP_DSS_DISPLAY_SUSPENDED:
 		printk(KERN_ERR "sSUSPENDED");
+#if 0
 		if (substream) /* stop only is the substream is valid */
 			snd_pcm_stop(substream, SNDRV_PCM_STATE_DISCONNECTED);
+#endif
 		gpio_set_value(50, 0);
 		break;
 	default:
@@ -127,6 +147,9 @@ int static omap_hdmi_probe(struct snd_soc_codec *codec)
 
 	gpio_request(50, NULL);
 	gpio_direction_output(50, 1);
+
+	snd_soc_jack_new(codec, "HDMI audio jack", SND_JACK_VIDEOOUT,
+					&hdmi_data->jack);
 
 	dev_set_drvdata(&pdev->dev, hdmi_data);
 
