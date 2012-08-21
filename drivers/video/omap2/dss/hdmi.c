@@ -34,6 +34,7 @@
 #include <linux/clk.h>
 #include <linux/gpio.h>
 #include <linux/regulator/consumer.h>
+#include <linux/slab.h>
 #include <video/omapdss.h>
 
 #include "ti_hdmi.h"
@@ -942,6 +943,66 @@ static void __init hdmi_probe_pdata(struct platform_device *pdev)
 	}
 }
 
+static int __init hdmi_probe_of(struct platform_device *pdev)
+{
+	struct device_node *node = pdev->dev.of_node;
+	struct device_node *child;
+	int r;
+	u32 v;
+
+	node = of_find_compatible_node(node, NULL, "ti,tpd12s015");
+
+	if (!node) {
+		DSSERR("TPD12S015 subnode not found.\n");
+		return -EINVAL;
+	}
+
+	r = of_property_read_u32(node, "ct-cp-hpd-gpio", &v);
+	if (r)
+		printk("ct-cp-hpd-gpio fail\n");
+
+	hdmi.ct_cp_hpd_gpio = v;
+
+	r = of_property_read_u32(node, "ls-oe-gpio", &v);
+	if (r)
+		printk("ls-oe-gpio fail\n");
+
+	hdmi.ls_oe_gpio = v;
+
+	r = of_property_read_u32(node, "hpd-gpio", &v);
+	if (r)
+		printk("hpd-gpio fail\n");
+
+	hdmi.hpd_gpio = v;
+
+	for_each_child_of_node(node, child) {
+		struct omap_dss_device *dssdev;
+
+		printk("hdmi child %s\n", child->name);
+
+		dssdev = kzalloc(sizeof(*dssdev), GFP_KERNEL);
+
+		dssdev->dev.of_node = child;
+
+		dssdev->type = OMAP_DISPLAY_TYPE_HDMI;
+		dssdev->name = child->name;
+		dssdev->channel = OMAP_DSS_CHANNEL_DIGIT;
+
+		r = hdmi_init_display(dssdev);
+		if (r) {
+			DSSERR("device %s init failed: %d\n", dssdev->name, r);
+			continue;
+		}
+
+		r = omap_dss_register_device(dssdev, &pdev->dev, -1);
+		if (r)
+			DSSERR("device %s register failed: %d\n",
+					dssdev->name, r);
+	}
+
+	return 0;
+}
+
 /* HDMI HW IP initialisation */
 static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 {
@@ -985,7 +1046,15 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 
 	dss_debugfs_create_file("hdmi", hdmi_dump_regs);
 
-	hdmi_probe_pdata(pdev);
+	r = 0;
+
+	if (pdev->dev.of_node)
+		r = hdmi_probe_of(pdev);
+	else if (pdev->dev.platform_data)
+		hdmi_probe_pdata(pdev);
+
+	if (r)
+		return r; // XXX free resources
 
 	return 0;
 }
@@ -1041,12 +1110,24 @@ static const struct dev_pm_ops hdmi_pm_ops = {
 	.runtime_resume = hdmi_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id hdmi_of_match[] = {
+	{
+		.compatible = "ti,omap4-hdmi",
+	},
+	{},
+};
+#else
+#define hdmi_of_match NULL
+#endif
+
 static struct platform_driver omapdss_hdmihw_driver = {
 	.remove         = __exit_p(omapdss_hdmihw_remove),
 	.driver         = {
 		.name   = "omapdss_hdmi",
 		.owner  = THIS_MODULE,
 		.pm	= &hdmi_pm_ops,
+		.of_match_table = hdmi_of_match,
 	},
 };
 
