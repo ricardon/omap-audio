@@ -203,14 +203,14 @@
 
 			dsi1: dsi@1 {
 				compatible = "ti,omap4-dsi";
-				ti,hwmods = "dss_dsi1";
+				ti,hwmods = "dss_dsi1_a";
 				id = <0>;
 				vdds_dsi-supply = <&ldo7_reg>;
 			};
 
 			dsi2: dsi@2 {
 				compatible = "ti,omap4-dsi";
-				ti,hwmods = "dss_dsi2";
+				ti,hwmods = "dss_dsi1_c";
 				id = <1>;
 				vdds_dsi-supply = <&ldo7_reg>;
 			};
