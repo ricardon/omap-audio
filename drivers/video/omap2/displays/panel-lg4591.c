@@ -19,6 +19,8 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define DEBUG
+
 #include <linux/module.h>
 #include <linux/debugfs.h>
 #include <linux/delay.h>

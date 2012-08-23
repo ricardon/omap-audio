@@ -53,7 +53,7 @@ module_param_named(def_disp, def_disp_name, charp, 0);
 MODULE_PARM_DESC(def_disp, "default display name");
 
 #ifdef DEBUG
-bool dss_debug;
+bool dss_debug = 1;
 module_param_named(debug, dss_debug, bool, 0644);
 #endif
 
