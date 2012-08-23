@@ -92,6 +92,9 @@ struct lg4591_data {
 	struct panel_lg4591_data *pdata;
 };
 
+// XXX HACK
+static struct panel_lg4591_data of_pdata;
+
 struct lg4591_reg {
 	/* Address and register value */
 	u8 data[10];
@@ -316,6 +319,7 @@ static const struct backlight_ops lg4591_backlight_ops  = {
 
 static int lg4591_probe(struct omap_dss_device *dssdev)
 {
+	struct device_node *node = dssdev->dev.of_node;
 	int ret = 0;
 	struct backlight_properties props = {
 		.brightness = 255,
@@ -326,9 +330,43 @@ static int lg4591_probe(struct omap_dss_device *dssdev)
 
 	dev_dbg(&dssdev->dev, "lg4591_probe\n");
 
-	if (dssdev->data == NULL) {
+	if (node == NULL && dssdev->data == NULL) {
 		dev_err(&dssdev->dev, "no platform data!\n");
 		return -EINVAL;
+	}
+
+	if (node) {
+		u32 v;
+		u32 lane_arr[8];
+		int len;
+		struct property *prop;
+		struct omap_dsi_pin_config pin_cfg;
+		int r, i;
+
+
+		r = of_property_read_u32(node, "reset-gpio", &v);
+		printk("reset gpio %d\n", v);
+		of_pdata.reset_gpio = r ? -1 : v;
+
+
+		prop = of_find_property(node, "lanes", &len);
+		if (prop == NULL)
+			printk("FAILED to find lanes\n");
+
+		if (len != 8 * sizeof(u32))
+			printk("bad number of lanes: %d\n", len);
+
+		r = of_property_read_u32_array(node, "lanes", lane_arr, 8);
+		if (r)
+			printk("FAILED to read lanes: %d\n", r);
+
+		pin_cfg.num_pins = 8;
+		for (i = 0; i < 8; ++i)
+			pin_cfg.pins[i] = (int)lane_arr[i];
+
+		of_pdata.pin_config = pin_cfg;
+
+		dssdev->data = &of_pdata;
 	}
 
 	dssdev->panel.timings = lg4591_timings;
@@ -504,6 +542,12 @@ static int lg4591_power_on(struct omap_dss_device *dssdev)
 	omapdss_dsi_set_videomode_timings(dssdev, &vm_data);
 	omapdss_dsi_set_operation_mode(dssdev, OMAP_DSS_DSI_VIDEO_MODE);
 
+	r = omapdss_dsi_set_clocks(dssdev, 216000000, 10000000);
+	if (r) {
+		dev_err(&dssdev->dev, "failed to set HS and LP clocks\n");
+		goto err0;
+	}
+
 	r = omapdss_dsi_display_enable(dssdev);
 	if (r) {
 		dev_err(&dssdev->dev, "failed to enable DSI\n");
@@ -642,6 +686,19 @@ static int lg4591_sync(struct omap_dss_device *dssdev)
 	return 0;
 }
 
+#if defined(CONFIG_OF)
+static const struct of_device_id lg4591_of_match[] = {
+	{
+		.compatible = "ti,lg4591",
+	},
+	{},
+};
+
+MODULE_DEVICE_TABLE(of, lg4591_of_match);
+#else
+#define dss_of_match NULL
+#endif
+
 static struct omap_dss_driver lg4591_driver = {
 	.probe = lg4591_probe,
 	.remove = lg4591_remove,
@@ -671,6 +728,7 @@ static struct omap_dss_driver lg4591_driver = {
 	.driver = {
 		.name = "lg4591",
 		.owner = THIS_MODULE,
+		.of_match_table = lg4591_of_match,
 	},
 };
 
@@ -687,3 +745,5 @@ static void __exit lg4591_exit(void)
 
 module_init(lg4591_init);
 module_exit(lg4591_exit);
+
+MODULE_LICENSE("GPL");
