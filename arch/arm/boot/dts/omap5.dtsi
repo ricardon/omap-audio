@@ -187,5 +187,39 @@
 			#size-cells = <0>;
 			ti,hwmods = "i2c1";
 		};
+
+		dss {
+			compatible = "ti,omap4-dss";
+			ti,hwmods = "dss_core";
+
+			dispc {
+				compatible = "ti,omap4-dispc";
+				ti,hwmods = "dss_dispc";
+			};
+
+			dpi: dpi {
+				compatible = "ti,omap4-dpi";
+			};
+
+			dsi1: dsi@1 {
+				compatible = "ti,omap4-dsi";
+				ti,hwmods = "dss_dsi1";
+				id = <0>;
+				vdds_dsi-supply = <&ldo7_reg>;
+			};
+
+			dsi2: dsi@2 {
+				compatible = "ti,omap4-dsi";
+				ti,hwmods = "dss_dsi2";
+				id = <1>;
+				vdds_dsi-supply = <&ldo7_reg>;
+			};
+
+			hdmi: hdmi {
+				compatible = "ti,omap4-hdmi";
+				ti,hwmods = "dss_hdmi";
+				vdda_hdmi_dac-supply = <&ldo7_reg>;
+			};
+		};
 	};
 };
