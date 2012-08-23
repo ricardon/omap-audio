@@ -50,6 +50,7 @@ enum dss_feat_id {
 	FEAT_DSI_VC_OCP_WIDTH,
 	FEAT_DSI_REVERSE_TXCLKESC,
 	FEAT_DSI_GNQ,
+	FEAT_DPI_USES_VDDS_DSI,
 	FEAT_HDMI_CTS_SWMODE,
 	FEAT_HDMI_AUDIO_USE_MCLK,
 	FEAT_HANDLE_UV_SEPARATE,
@@ -64,6 +65,8 @@ enum dss_feat_id {
 	/* An unknown HW bug causing the normal FIFO thresholds not to work */
 	FEAT_OMAP3_DSI_FIFO_BUG,
 	FEAT_BURST_2D,
+	FEAT_DSI_PLL_SELFREQDCO,
+	FEAT_DSI_PLL_REFSEL,
 };
 
 /* DSS register field id */
@@ -113,6 +116,7 @@ u32 dss_feat_get_buffer_size_unit(void);	/* in bytes */
 u32 dss_feat_get_burst_size_unit(void);		/* in bytes */
 
 bool dss_feat_rotation_type_supported(enum omap_dss_rotation_type rot_type);
+int dss_feat_get_dsi_ddr_div(void);
 
 bool dss_has_feature(enum dss_feat_id id);
 void dss_feat_get_reg_field(enum dss_feat_reg_field id, u8 *start, u8 *end);
