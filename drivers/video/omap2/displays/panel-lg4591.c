@@ -327,6 +327,7 @@ static int lg4591_probe(struct omap_dss_device *dssdev)
 		.type = BACKLIGHT_RAW,
 	};
 	struct lg4591_data *lg_d = NULL;
+	int r;
 
 	dev_dbg(&dssdev->dev, "lg4591_probe\n");
 
@@ -341,7 +342,7 @@ static int lg4591_probe(struct omap_dss_device *dssdev)
 		int len;
 		struct property *prop;
 		struct omap_dsi_pin_config pin_cfg;
-		int r, i;
+		int i;
 
 
 		r = of_property_read_u32(node, "reset-gpio", &v);
@@ -369,6 +370,7 @@ static int lg4591_probe(struct omap_dss_device *dssdev)
 		dssdev->data = &of_pdata;
 	}
 
+	dssdev->caps = 0;
 	dssdev->panel.timings = lg4591_timings;
 
 	lg_d = kzalloc(sizeof(*lg_d), GFP_KERNEL);
@@ -389,6 +391,12 @@ static int lg4591_probe(struct omap_dss_device *dssdev)
 	mutex_init(&lg_d->lock);
 
 	dev_set_drvdata(&dssdev->dev, lg_d);
+
+	r = gpio_request_one(lg_d->pdata->reset_gpio, GPIOF_DIR_OUT, "lcd reset");
+	if (r) {
+		printk("failed to request gpio\n");
+		return r;
+	}
 
 	/* Register DSI backlight control */
 	lg_d->bldev = backlight_device_register("lg4591", &dssdev->dev, dssdev,
@@ -542,7 +550,7 @@ static int lg4591_power_on(struct omap_dss_device *dssdev)
 	omapdss_dsi_set_videomode_timings(dssdev, &vm_data);
 	omapdss_dsi_set_operation_mode(dssdev, OMAP_DSS_DSI_VIDEO_MODE);
 
-	r = omapdss_dsi_set_clocks(dssdev, 216000000, 10000000);
+	r = omapdss_dsi_set_clocks(dssdev, 240000000, 10000000);
 	if (r) {
 		dev_err(&dssdev->dev, "failed to set HS and LP clocks\n");
 		goto err0;
