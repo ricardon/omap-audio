@@ -1477,7 +1477,7 @@ static int dsi_pll_calc_ddrfreq(struct platform_device *dsidev,
 
 	cur.clkin = dss_sys_clk;
 
-	req_clkin4ddr = req_clk * 4;
+	req_clkin4ddr = req_clk * dsi->ddr_div;
 
 	for (cur.regn = 1; cur.regn < dsi->regn_max; ++cur.regn) {
 		cur.fint = cur.clkin / cur.regn;
@@ -4219,7 +4219,8 @@ int omapdss_dsi_set_clocks(struct omap_dss_device *dssdev,
 
 	/* pck = TxByteClkHS * datalanes * 8 / bitsperpixel */
 
-	pck = cinfo.clkin4ddr / 16 * (dsi->num_lanes_used - 1) * 8 / bpp;
+	pck = cinfo.clkin4ddr / (dsi->ddr_div * 4) *
+		(dsi->num_lanes_used - 1) * 8 / bpp;
 
 	DSSDBG("finding pck %lu\n", pck);
 
