@@ -108,7 +108,37 @@ static int tfp410_probe(struct omap_dss_device *dssdev)
 	ddata->dssdev = dssdev;
 	mutex_init(&ddata->lock);
 
-	if (dssdev->data) {
+	if (dssdev->dev.of_node) {
+		struct device_node *node = dssdev->dev.of_node;
+		u32 gpio, bus_num;
+
+		r = of_property_read_u32(node, "enable-gpio", &gpio);
+		if (r == 0)
+			ddata->pd_gpio = gpio;
+		else
+			ddata->pd_gpio = -1;
+
+		r = of_property_read_u32(node, "i2c-bus-num", &bus_num);
+		if (r == 0)
+			i2c_bus_num = bus_num;
+		else
+			i2c_bus_num = -1;
+
+#if 0
+		struct device_node *ddc_node;
+		struct i2c_client *c;
+
+		ddc_node = of_parse_phandle(node, "ddc", 0);
+
+		if (ddc_node) {
+			c = of_find_i2c_device_by_node(ddc_node);
+
+			ddata->i2c_client = c;
+			ddata->i2c_adapter = ddata->i2c_client->adapter;
+		}
+#endif
+	}
+	else if (dssdev->data) {
 		struct tfp410_platform_data *pdata = dssdev->data;
 
 		ddata->pd_gpio = pdata->power_down_gpio;
@@ -357,6 +387,19 @@ out:
 	return true;
 }
 
+#if defined(CONFIG_OF)
+static const struct of_device_id taal_of_match[] = {
+	{
+		.compatible = "ti,tfp410",
+	},
+	{},
+};
+
+MODULE_DEVICE_TABLE(of, taal_of_match);
+#else
+#define dss_of_match NULL
+#endif
+
 static struct omap_dss_driver tfp410_driver = {
 	.probe		= tfp410_probe,
 	.remove		= __exit_p(tfp410_remove),
@@ -376,6 +419,7 @@ static struct omap_dss_driver tfp410_driver = {
 	.driver         = {
 		.name   = "tfp410",
 		.owner  = THIS_MODULE,
+		.of_match_table = taal_of_match,
 	},
 };
 
@@ -392,3 +436,35 @@ static void __exit tfp410_exit(void)
 module_init(tfp410_init);
 module_exit(tfp410_exit);
 MODULE_LICENSE("GPL");
+
+#if 0
+static struct i2c_device_id foo_idtable[] = {
+	{ "eeprom", 0x50 },
+	{ }
+};
+
+MODULE_DEVICE_TABLE(i2c, foo_idtable);
+
+static int __devinit
+foo_probe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+	printk("I2C FOO PROBE, client %p, id %p\n", client, id);
+	return 0;
+}
+
+static int foo_remove(struct i2c_client *client)
+{
+	printk("I2C FOO REMOVE\n");
+	return 0;
+}
+
+static struct i2c_driver foo_driver = {
+	.driver = {
+		.name	= "eeprom",
+	},
+
+	.id_table	= foo_idtable,
+	.probe		= foo_probe,
+	.remove		= foo_remove,
+};
+#endif

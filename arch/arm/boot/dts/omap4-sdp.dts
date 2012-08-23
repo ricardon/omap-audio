@@ -226,3 +226,60 @@
 	bus-width = <4>;
 	ti,non-removable;
 };
+
+&dsi1 {
+	lcd {
+		compatible = "ti,taal";
+
+		lanes = <
+			0       /* clk + */
+			1       /* clk - */
+			2       /* data1 + */
+			3       /* data1 - */
+			4       /* data2 + */
+			5       /* data2 - */
+		>;
+
+		panel_type = "taal";
+		reset-gpio = <102>;
+		/* use-ext-te; */
+		/* ext-te-gpio = <101>; */
+		esd-interval = <0>;
+	};
+};
+
+&dsi2 {
+	lcd2 {
+		compatible = "ti,taal";
+
+		lanes = <
+			0       /* clk + */
+			1       /* clk - */
+			2       /* data1 + */
+			3       /* data1 - */
+			4       /* data2 + */
+			5       /* data2 - */
+		>;
+
+		panel_type = "taal";
+		reset-gpio = <104>;
+		/* use-ext-te; */
+		/* ext-te-gpio = <103>; */
+		esd-interval = <0>;
+	};
+};
+
+&hdmi {
+	tpd12s015 {
+		compatible = "ti,tpd12s015";
+
+		ct-cp-hpd-gpio = <60>;
+		ls-oe-gpio = <41>;
+		hpd-gpio = <63>;
+
+		hdmi-monitor {
+			compatible = "ti,hdmi_panel";
+		};
+
+	};
+};

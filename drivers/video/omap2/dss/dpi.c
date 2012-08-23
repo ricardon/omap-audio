@@ -23,12 +23,16 @@
 #define DSS_SUBSYS_NAME "DPI"
 
 #include <linux/kernel.h>
+#include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/export.h>
 #include <linux/err.h>
 #include <linux/errno.h>
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
+#include <linux/slab.h>
 
 #include <video/omapdss.h>
 #include <plat/cpu.h>
@@ -410,11 +414,59 @@ static void __init dpi_probe_pdata(struct platform_device *pdev)
 	}
 }
 
+static void __init dpi_probe_of(struct platform_device *pdev)
+{
+	struct device_node *node = pdev->dev.of_node;
+	struct device_node *child;
+	int r;
+
+	for_each_child_of_node(node, child) {
+		struct omap_dss_device *dssdev;
+		u32 datalines, channel;
+
+		printk("dpi child %s\n", child->name);
+
+		r = of_property_read_u32(child, "data-lines", &datalines);
+		if (r)
+			printk("datalines fail\n");
+
+		r = of_property_read_u32(child, "channel", &channel);
+		if (r)
+			printk("channel fail\n");
+
+		dssdev = kzalloc(sizeof(*dssdev), GFP_KERNEL);
+
+		dssdev->dev.of_node = child;
+
+		dssdev->type = OMAP_DISPLAY_TYPE_DPI;
+		dssdev->name = child->name;
+		dssdev->phy.dpi.data_lines = datalines;
+		dssdev->channel = OMAP_DSS_CHANNEL_LCD2;
+
+		r = dpi_init_display(dssdev);
+		if (r) {
+			DSSERR("device %s init failed: %d\n", dssdev->name, r);
+			continue;
+		}
+
+		r = omap_dss_register_device(dssdev, &pdev->dev, -1);
+		if (r)
+			printk("dss register device failed\n");
+		else
+			printk("dssdev added\n");
+	}
+}
+
 static int __init omap_dpi_probe(struct platform_device *pdev)
 {
+	DSSDBG("probe\n");
+
 	mutex_init(&dpi.lock);
 
-	dpi_probe_pdata(pdev);
+	if (pdev->dev.of_node)
+		dpi_probe_of(pdev);
+	else if (pdev->dev.platform_data)
+		dpi_probe_pdata(pdev);
 
 	return 0;
 }
@@ -426,11 +478,23 @@ static int __exit omap_dpi_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#if defined(CONFIG_OF)
+static const struct of_device_id dpi_of_match[] = {
+	{
+		.compatible = "ti,omap4-dpi",
+	},
+	{},
+};
+#else
+#define dpi_of_match NULL
+#endif
+
 static struct platform_driver omap_dpi_driver = {
 	.remove         = __exit_p(omap_dpi_remove),
 	.driver         = {
 		.name   = "omapdss_dpi",
 		.owner  = THIS_MODULE,
+		.of_match_table = dpi_of_match,
 	},
 };
 

@@ -23,6 +23,7 @@
 #define DSS_SUBSYS_NAME "DISPC"
 
 #include <linux/kernel.h>
+#include <linux/module.h>
 #include <linux/dma-mapping.h>
 #include <linux/vmalloc.h>
 #include <linux/export.h>
@@ -36,6 +37,7 @@
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
+#include <linux/slab.h>
 
 #include <plat/clock.h>
 
@@ -3799,6 +3801,8 @@ static int __init omap_dispchw_probe(struct platform_device *pdev)
 	struct resource *dispc_mem;
 	struct clk *clk;
 
+	DSSDBG("probe\n");
+
 	dispc.pdev = pdev;
 
 	r = dispc_init_features(&dispc.pdev->dev);
@@ -3906,12 +3910,24 @@ static const struct dev_pm_ops dispc_pm_ops = {
 	.runtime_resume = dispc_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id dispc_of_match[] = {
+	{
+		.compatible = "ti,omap4-dispc",
+	},
+	{},
+};
+#else
+#define dispc_of_match NULL
+#endif
+
 static struct platform_driver omap_dispchw_driver = {
 	.remove         = __exit_p(omap_dispchw_remove),
 	.driver         = {
 		.name   = "omapdss_dispc",
 		.owner  = THIS_MODULE,
 		.pm	= &dispc_pm_ops,
+		.of_match_table = dispc_of_match,
 	},
 };
 

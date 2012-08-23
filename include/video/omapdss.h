@@ -317,6 +317,8 @@ extern int omap_display_init(struct omap_dss_board_info *board_data);
 /* HDMI mux init*/
 extern int omap_hdmi_init(enum omap_hdmi_flags flags);
 
+extern int __init omap_display_init_of(void);
+
 struct omap_video_timings {
 	/* Unit: pixels */
 	u16 x_res;
@@ -605,6 +607,8 @@ struct omap_dss_device {
 
 struct omap_dss_hdmi_data
 {
+	int ct_cp_hpd_gpio;
+	int ls_oe_gpio;
 	int hpd_gpio;
 };
 
@@ -736,6 +740,8 @@ int omap_dsi_set_vc_id(struct omap_dss_device *dssdev, int channel, int vc_id);
 void omap_dsi_release_vc(struct omap_dss_device *dssdev, int channel);
 int omapdss_dsi_configure_pins(struct omap_dss_device *dssdev,
 		const struct omap_dsi_pin_config *pin_cfg);
+int omapdss_dsi_set_clocks(struct omap_dss_device *dssdev,
+		unsigned long ddr_clk, unsigned long lp_clk);
 
 int omapdss_dsi_display_enable(struct omap_dss_device *dssdev);
 void omapdss_dsi_display_disable(struct omap_dss_device *dssdev,

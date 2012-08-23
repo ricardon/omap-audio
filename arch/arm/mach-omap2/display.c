@@ -23,6 +23,8 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/delay.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
 
 #include <video/omapdss.h>
 #include <plat/omap_hwmod.h>
@@ -553,4 +555,73 @@ int omap_dss_reset(struct omap_hwmod *oh)
 	r = (c == MAX_MODULE_SOFTRESET_WAIT) ? -ETIMEDOUT : 0;
 
 	return r;
+}
+
+/* HDMI HACK function */
+static __init void hdmi_hack_init_of(void)
+{
+	int ls_oe_gpio, ct_cp_hpd_gpio, hpd_gpio;
+	enum omap_hdmi_flags flags;
+
+	if (of_machine_is_compatible("ti,omap4-sdp")) {
+		ls_oe_gpio = 41;
+		ct_cp_hpd_gpio = 60;
+		hpd_gpio = 63;
+
+		if (cpu_is_omap446x() || omap_rev() > OMAP4430_REV_ES2_2)
+			flags = OMAP_HDMI_SDA_SCL_EXTERNAL_PULLUP;
+		else
+			flags = 0;
+	} else if (of_machine_is_compatible("ti,omap4-panda")) {
+		ls_oe_gpio = 41;
+		ct_cp_hpd_gpio = 60;
+		hpd_gpio = 63;
+
+		if (cpu_is_omap446x() || omap_rev() > OMAP4430_REV_ES2_2)
+			flags = OMAP_HDMI_SDA_SCL_EXTERNAL_PULLUP;
+		else
+			flags = 0;
+	} else {
+		return;
+	}
+
+	omap_hdmi_init(flags);
+
+	omap_mux_init_gpio(ls_oe_gpio, OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(ct_cp_hpd_gpio, OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(hpd_gpio, OMAP_PIN_INPUT_PULLDOWN);
+}
+
+int __init omap_display_init_of(void)
+{
+	int r;
+	struct platform_device *pdev;
+	struct device_node *node;
+
+	static struct omap_dss_board_info board_data = {
+		.dsi_enable_pads = omap_dsi_enable_pads,
+		.dsi_disable_pads = omap_dsi_disable_pads,
+		.get_context_loss_count = omap_pm_get_dev_context_loss_count,
+	};
+
+	omap_display_device.dev.platform_data = &board_data;
+
+	r = platform_device_register(&omap_display_device);
+	if (r < 0) {
+		printk(KERN_ERR "Unable to register OMAP-Display device\n");
+		return r;
+	}
+
+	node = of_find_node_by_name(NULL, "dss");
+	BUG_ON(!node);
+
+	pdev = of_find_device_by_node(node);
+	BUG_ON(!pdev);
+
+	r = of_platform_populate(node, NULL, NULL, &pdev->dev);
+	BUG_ON(r);
+
+	hdmi_hack_init_of();
+
+	return 0;
 }

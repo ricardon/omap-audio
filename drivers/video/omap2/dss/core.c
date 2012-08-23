@@ -33,6 +33,7 @@
 #include <linux/device.h>
 #include <linux/regulator/consumer.h>
 #include <linux/suspend.h>
+#include <linux/of_device.h>
 
 #include <video/omapdss.h>
 
@@ -291,7 +292,19 @@ static int dss_bus_match(struct device *dev, struct device_driver *driver)
 	DSSDBG("bus_match. dev %s/%s, drv %s\n",
 			dev_name(dev), dssdev->driver_name, driver->name);
 
-	return strcmp(dssdev->driver_name, driver->name) == 0;
+	/* Attempt an OF style match first */
+	if (of_driver_match_device(dev, driver)) {
+		printk("OF match!\n");
+		return 1;
+	}
+
+	if (dssdev->driver_name && driver->name &&
+			strcmp(dssdev->driver_name, driver->name) == 0) {
+		printk("LEGACY MATCH\n");
+		return 1;
+	}
+
+	return 0;
 }
 
 static ssize_t device_name_show(struct device *dev,
@@ -450,21 +463,27 @@ static void omap_dss_dev_release(struct device *dev)
 	reset_device(dev, 0);
 }
 
+static int num_displays;
+
 int omap_dss_register_device(struct omap_dss_device *dssdev,
 		struct device *parent, int disp_num)
 {
-	WARN_ON(!dssdev->driver_name);
+	//WARN_ON(!dssdev->driver_name);
 
-	reset_device(&dssdev->dev, 1);
+	//reset_device(&dssdev->dev, 1);
 	dssdev->dev.bus = &dss_bus_type;
 	dssdev->dev.parent = parent;
 	dssdev->dev.release = omap_dss_dev_release;
+	if (disp_num == -1)
+		disp_num = num_displays;
+	num_displays++;
 	dev_set_name(&dssdev->dev, "display%d", disp_num);
 	return device_register(&dssdev->dev);
 }
 
 void omap_dss_unregister_device(struct omap_dss_device *dssdev)
 {
+	num_displays--;
 	device_unregister(&dssdev->dev);
 }
 
