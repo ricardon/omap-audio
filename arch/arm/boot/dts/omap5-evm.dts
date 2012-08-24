@@ -44,6 +44,8 @@
 			5       /* data2 - */
 			6       /* data3 + */
 			7       /* data3 - */
+			8       /* data4 + */
+			9       /* data4 - */
 		>;
 
 		vdds_foo-supply = <&ldo2_reg>;
