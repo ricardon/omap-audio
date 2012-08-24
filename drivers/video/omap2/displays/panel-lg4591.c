@@ -337,8 +337,9 @@ static int lg4591_probe(struct omap_dss_device *dssdev)
 	}
 
 	if (node) {
+		const int no_pins = 10;
 		u32 v;
-		u32 lane_arr[8];
+		u32 lane_arr[no_pins];
 		int len;
 		struct property *prop;
 		struct omap_dsi_pin_config pin_cfg;
@@ -354,15 +355,15 @@ static int lg4591_probe(struct omap_dss_device *dssdev)
 		if (prop == NULL)
 			printk("FAILED to find lanes\n");
 
-		if (len != 8 * sizeof(u32))
+		if (len != no_pins * sizeof(u32))
 			printk("bad number of lanes: %d\n", len);
 
-		r = of_property_read_u32_array(node, "lanes", lane_arr, 8);
+		r = of_property_read_u32_array(node, "lanes", lane_arr, no_pins);
 		if (r)
 			printk("FAILED to read lanes: %d\n", r);
 
-		pin_cfg.num_pins = 8;
-		for (i = 0; i < 8; ++i)
+		pin_cfg.num_pins = no_pins;
+		for (i = 0; i < no_pins; ++i)
 			pin_cfg.pins[i] = (int)lane_arr[i];
 
 		of_pdata.pin_config = pin_cfg;
