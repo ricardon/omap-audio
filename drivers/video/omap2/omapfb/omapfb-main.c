@@ -1192,7 +1192,7 @@ static int _setcolreg(struct fb_info *fbi, u_int regno, u_int red, u_int green,
 			break;
 
 		if (regno < 16) {
-			u16 pal;
+			u32 pal;
 			pal = ((red >> (16 - var->red.length)) <<
 					var->red.offset) |
 				((green >> (16 - var->green.length)) <<
@@ -2428,6 +2428,8 @@ static int __init omapfb_probe(struct platform_device *pdev)
 	ovl = omap_dss_get_overlay(0);
 	if (ovl->manager && ovl->manager->device) {
 		def_display = ovl->manager->device;
+		dev_info(&pdev->dev, "using %s as default display\n",
+				def_display->name);
 	} else {
 		dev_warn(&pdev->dev, "cannot find default display\n");
 		def_display = NULL;

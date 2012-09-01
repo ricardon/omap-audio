@@ -95,7 +95,7 @@
 	 * Display monitor features are burnt in their EEPROM as EDID data.
 	 * The EEPROM is connected as I2C slave device.
 	 */
-	eeprom@50 {
+	dviddc: eeprom@50 {
 		compatible = "ti,eeprom";
 		reg = <0x50>;
 	};
@@ -125,4 +125,30 @@
 &mmc5 {
 	ti,non-removable;
 	bus-width = <4>;
+};
+
+&dpi {
+	dvi {
+		compatible = "ti,tfp410";
+		data-lines = <24>;
+		channel = <2>;
+		enable-gpio = <0>;
+		i2c-bus-num = <3>;
+		/* ddc = <&dviddc>; */
+	};
+};
+
+&hdmi {
+	tpd12s015 {
+		compatible = "ti,tpd12s015";
+
+		ct-cp-hpd-gpio = <60>;
+		ls-oe-gpio = <41>;
+		hpd-gpio = <63>;
+
+		hdmi-monitor {
+			compatible = "ti,hdmi_panel";
+		};
+
+	};
 };
