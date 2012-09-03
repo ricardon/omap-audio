@@ -320,6 +320,7 @@ int ti_hdmi_4xxx_phy_enable(struct hdmi_ip_data *ip_data)
 		return r;
 	}
 
+	/* FIXME: Do not use CPU checks! */
 	/* enable divby2 */
 	if (cpu_is_omap54xx())
 		REG_FLD_MOD(phy_base, HDMI_TXPHY_BIST_CONTROL, 1, 11, 11);
