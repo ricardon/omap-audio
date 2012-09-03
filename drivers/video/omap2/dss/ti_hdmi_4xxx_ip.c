@@ -192,6 +192,7 @@ static int hdmi_set_pll_pwr(struct hdmi_ip_data *ip_data, enum hdmi_pll_pwr val)
 
 static int hdmi_pll_reset(struct hdmi_ip_data *ip_data)
 {
+	/* FIXME: do not use CPU checks */
 	/* SYSRESET  controlled by power FSM */
 	if (cpu_is_omap44xx())
 		REG_FLD_MOD(hdmi_pll_base(ip_data),
