@@ -61,7 +61,9 @@ static struct {
 	struct clk *sys_clk;
 
 	struct regulator *vdda_hdmi_dac_reg;
+#if 0
 	struct regulator *vdds_hdmi;
+#endif
 
 	int ct_cp_hpd_gpio;
 	int ls_oe_gpio;
@@ -556,11 +558,13 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	if (r)
 		goto err_runtime_get;
 
+#if 0
 	if (soc_is_omap54xx()) {
 		r = regulator_enable(hdmi.vdds_hdmi);
 		if (r)
 			goto err_vdss_enable;
 	}
+#endif
 
 	dss_mgr_disable(dssdev->manager);
 
@@ -639,8 +643,10 @@ err_vid_enable:
 err_phy_enable:
 	hdmi.ip_data.ops->pll_disable(&hdmi.ip_data);
 err_deep_color:
+#if 0
 	regulator_disable(hdmi.vdds_hdmi);
 err_vdss_enable:
+#endif
 err_pll_enable:
 	hdmi_runtime_put();
 err_runtime_get:
@@ -659,8 +665,10 @@ static void hdmi_power_off(struct omap_dss_device *dssdev)
 	hdmi.ip_data.ops->phy_disable(&hdmi.ip_data);
 	hdmi.ip_data.ops->pll_disable(&hdmi.ip_data);
 
+#if 0
 	if (soc_is_omap54xx())
 		regulator_disable(hdmi.vdds_hdmi);
+#endif
 
 	hdmi.ip_data.cfg.deep_color = HDMI_DEEP_COLOR_24BIT;
 
@@ -1233,7 +1241,9 @@ static int __init hdmi_probe_of(struct platform_device *pdev)
 static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 {
 	struct resource *hdmi_mem;
+#if 0
 	struct regulator *vdds_hdmi;
+#endif
 	int r;
 
 	hdmi.pdev = pdev;
@@ -1316,6 +1326,7 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
+#if 0
 	if (soc_is_omap54xx()) {
 		/* Request for regulator supply required by HDMI PHY */
 		vdds_hdmi = regulator_get(&pdev->dev, "vdds_hdmi");
@@ -1325,6 +1336,7 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		}
 	hdmi.vdds_hdmi = vdds_hdmi;
 	}
+#endif
 
 	hdmi.ip_data.cfg.cm.code = 16;
 	hdmi.ip_data.cfg.cm.mode = HDMI_HDMI;
@@ -1367,10 +1379,12 @@ static int __exit omapdss_hdmihw_remove(struct platform_device *pdev)
 
 	hdmi_put_clocks();
 
+#if 0
 	if (soc_is_omap54xx()) {
 		regulator_put(hdmi.vdds_hdmi);
 		hdmi.vdds_hdmi = NULL;
 	}
+#endif
 
 	return 0;
 }
