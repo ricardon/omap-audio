@@ -498,7 +498,7 @@ static void hdmi_compute_pll(struct omap_dss_device *dssdev, int phy,
 		/*TODO: avoid cpu checks in the driver */
 		if (cpu_is_omap44xx()) {
 			pi->regm2 = HDMI_DEFAULT_REGM2;
-		} else if (cpu_is_omap54xx()) {
+		} else if (soc_is_omap54xx()) {
 			if (phy <= 50000)
 				pi->regm2 = 2;
 			else
