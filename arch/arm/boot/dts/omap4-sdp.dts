@@ -274,9 +274,9 @@
 	tpd12s015 {
 		compatible = "ti,tpd12s015";
 
-		ct-cp-hpd-gpio = <60>;
-		ls-oe-gpio = <41>;
-		hpd-gpio = <63>;
+		gpios = <&gpio2 28 0>,	/* 60, CT CP HPD */
+			<&gpio2 9 0>,	/* 41, LS OE */
+			<&gpio2 31 0>;	/* 63, HPD */
 
 		hdmi-monitor {
 			compatible = "ti,hdmi_panel";
