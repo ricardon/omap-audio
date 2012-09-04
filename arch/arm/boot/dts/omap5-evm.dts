@@ -123,5 +123,18 @@
 	};
 };
 
+&hdmi {
+	tpd12s015 {
+		compatible = "ti,tpd12s015";
+
+		gpios = <&gpio6 23 0>;	/* 193, CT CP HPD */
+
+		hdmi-monitor {
+			compatible = "ti,hdmi_panel";
+		};
+
+	};
+};
+
 /include/ "palmas.dtsi"
 /include/ "twl6040.dtsi"
