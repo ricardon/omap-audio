@@ -559,7 +559,7 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	if (soc_is_omap54xx()) {
 		r = regulator_enable(hdmi.vdds_hdmi);
 		if (r)
-			goto err;
+			goto err_vdss_enable;
 	}
 
 	dss_mgr_disable(dssdev->manager);
@@ -638,6 +638,7 @@ err_vid_enable:
 	hdmi.ip_data.ops->phy_disable(&hdmi.ip_data);
 err_phy_enable:
 	hdmi.ip_data.ops->pll_disable(&hdmi.ip_data);
+err_vdss_enable:
 err_pll_enable:
 	hdmi_runtime_put();
 err_runtime_get:
