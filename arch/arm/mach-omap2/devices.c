@@ -361,6 +361,12 @@ static struct platform_device omap_hdmi_audio = {
 	.id	= -1,
 };
 
+/*TODO: Hack to probe audio codec driver. Need to check a DT node */
+static struct platform_device omap_hdmi_audio_codec = {
+	.name	= "hdmi-audio-codec",
+	.id	= -1,
+};
+
 static void __init omap_init_hdmi_audio(void)
 {
 	struct omap_hwmod *oh;
@@ -378,6 +384,7 @@ static void __init omap_init_hdmi_audio(void)
 	     "Can't build omap_device for omap-hdmi-audio-dai.\n");
 
 	platform_device_register(&omap_hdmi_audio);
+	platform_device_register(&omap_hdmi_audio_codec);
 }
 #else
 static inline void omap_init_hdmi_audio(void) {}
@@ -637,7 +644,7 @@ static int __init omap2_init_devices(void)
 	 */
 	omap_init_audio();
 	omap_init_camera();
-	omap_init_hdmi_audio();
+	omap_init_hdmi_audio(); /* TODO: create only if !DT */
 	omap_init_mbox();
 	/* If dtb is there, the devices will be created dynamically */
 	if (!of_have_populated_dt()) {
