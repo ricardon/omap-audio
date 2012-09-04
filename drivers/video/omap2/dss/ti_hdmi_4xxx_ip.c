@@ -314,7 +314,7 @@ int ti_hdmi_4xxx_phy_enable(struct hdmi_ip_data *ip_data)
 	 */
 	if (cpu_is_omap44xx()) {
 		REG_FLD_MOD(phy_base, HDMI_TXPHY_TX_CTRL, 0x1, 31, 30);
-	} else if (cpu_is_omap54xx()) {
+	} else if (soc_is_omap54xx()) {
 		if (pclk < 62500) {
 			freqout = 0;
 		} else if ((pclk >= 62500) && (pclk < 185000)) {
@@ -354,7 +354,7 @@ int ti_hdmi_4xxx_phy_enable(struct hdmi_ip_data *ip_data)
 
 	/* FIXME: Do not use CPU checks! */
 	/* enable divby2 */
-	if (cpu_is_omap54xx())
+	if (soc_is_omap54xx())
 		REG_FLD_MOD(phy_base, HDMI_TXPHY_BIST_CONTROL, 1, 11, 11);
 
 	return 0;

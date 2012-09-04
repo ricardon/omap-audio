@@ -498,7 +498,7 @@ static void hdmi_compute_pll(struct omap_dss_device *dssdev, int phy,
 	if (dssdev->clocks.hdmi.regm2 == 0) {
 		if (cpu_is_omap44xx()) {
 			pi->regm2 = HDMI_DEFAULT_REGM2;
-		} else if (cpu_is_omap54xx()) {
+		} else if (soc_is_omap54xx()) {
 			if (phy <= 50000)
 				pi->regm2 = 2;
 			else
@@ -556,7 +556,7 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	if (r)
 		goto err_runtime_get;
 
-	if (cpu_is_omap54xx()) {
+	if (soc_is_omap54xx()) {
 		r = regulator_enable(hdmi.vdds_hdmi);
 		if (r)
 			goto err;
@@ -656,7 +656,7 @@ static void hdmi_power_off(struct omap_dss_device *dssdev)
 	hdmi.ip_data.ops->phy_disable(&hdmi.ip_data);
 	hdmi.ip_data.ops->pll_disable(&hdmi.ip_data);
 
-	if (cpu_is_omap54xx())
+	if (soc_is_omap54xx())
 		regulator_disable(hdmi.vdds_hdmi);
 
 	hdmi.ip_data.cfg.deep_color = HDMI_DEEP_COLOR_24BIT;
@@ -1313,7 +1313,7 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	if (cpu_is_omap54xx()) {
+	if (soc_is_omap54xx()) {
 		/* Request for regulator supply required by HDMI PHY */
 		vdds_hdmi = regulator_get(&pdev->dev, "vdds_hdmi");
 		if (IS_ERR(vdds_hdmi)) {
@@ -1364,7 +1364,7 @@ static int __exit omapdss_hdmihw_remove(struct platform_device *pdev)
 
 	hdmi_put_clocks();
 
-	if (cpu_is_omap54xx()) {
+	if (soc_is_omap54xx()) {
 		regulator_put(hdmi.vdds_hdmi);
 		hdmi.vdds_hdmi = NULL;
 	}
