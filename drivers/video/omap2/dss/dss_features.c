@@ -725,7 +725,7 @@ void dss_init_hdmi_ip_ops(struct hdmi_ip_data *ip_data)
 {
 	if (cpu_is_omap44xx())
 		ip_data->ops = &omap4_hdmi_functions;
-	else if (cpu_is_omap54xx())
+	else if (soc_is_omap54xx())
 		ip_data->ops = &omap5_hdmi_functions;
 }
 #endif
