@@ -127,7 +127,7 @@
 	tpd12s015 {
 		compatible = "ti,tpd12s015";
 
-		gpios = <&gpio6 23 0>,	/* 193, CT CP HPD */
+		gpios = <&gpio7 1 0>,	/* 193, CT CP HPD */
 			<&gpio5 19 0>,	/* 147, IO EXPANDER SCL*/
 			<&gpio5 20 0>;	/* 148, IO EXPANDER SDA*/
 
