@@ -368,7 +368,11 @@ static int __init hdmi_init_display(struct omap_dss_device *dssdev)
 		hdmi.vdda_hdmi_dac_reg = reg;
 	}
 
-	r = gpio_request_array(gpios, ARRAY_SIZE(gpios));
+	/* in OMAP5, LS_OE and CT_CP_HPD are controlled via a I2C IO expander*/
+	if (cpu_is_omap44xx())
+		r = gpio_request_array(gpios, ARRAY_SIZE(gpios));
+	else /* OMAP5 */
+		r = gpio_request_one(hdmi.hpd_gpio, GPIOF_DIR_IN, "hdmi_hpd");
 	if (r)
 		return r;
 
@@ -545,8 +549,12 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	struct omap_video_timings *p;
 	unsigned long phy;
 
-	gpio_set_value(hdmi.ct_cp_hpd_gpio, 1);
-	gpio_set_value(hdmi.ls_oe_gpio, 1);
+	if (cpu_is_omap44xx()) {
+		gpio_set_value(hdmi.ct_cp_hpd_gpio, 1);
+		gpio_set_value(hdmi.ls_oe_gpio, 1);
+	} else {
+		/* for OMAP5, tell IO expander to set LS_OE and CT_CP_HPD */
+	}
 
 	/* wait 300us after CT_CP_HPD for the 5V power output to reach 90% */
 	udelay(300);
@@ -653,8 +661,12 @@ err_pll_enable:
 err_runtime_get:
 	regulator_disable(hdmi.vdda_hdmi_dac_reg);
 err_vdac_enable:
-	gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
-	gpio_set_value(hdmi.ls_oe_gpio, 0);
+	if (cpu_is_omap44xx()) {
+		gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
+		gpio_set_value(hdmi.ls_oe_gpio, 0);
+	} else {
+		/* for OMAP5, tell IO expander to set LS_OE and CT_CP_HPD */
+	}
 	return -EIO;
 }
 
@@ -677,8 +689,12 @@ static void hdmi_power_off(struct omap_dss_device *dssdev)
 
 	regulator_disable(hdmi.vdda_hdmi_dac_reg);
 
-	gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
-	gpio_set_value(hdmi.ls_oe_gpio, 0);
+	if (cpu_is_omap44xx()) {
+		gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
+		gpio_set_value(hdmi.ls_oe_gpio, 0);
+	} else {
+		/* for OMAP5, tell IO expander to set LS_OE and CT_CP_HPD */
+	}
 }
 
 int omapdss_hdmi_set_deepcolor(struct omap_dss_device *dssdev, int val,
