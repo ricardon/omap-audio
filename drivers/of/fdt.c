@@ -9,6 +9,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+#define DEBUG
 #include <linux/kernel.h>
 #include <linux/initrd.h>
 #include <linux/module.h>
@@ -312,7 +313,7 @@ static unsigned long unflatten_dt_node(struct boot_param_header *blob,
 			prev_pp = &pp->next;
 			memcpy(pp->value, ps, sz - 1);
 			((char *)pp->value)[sz - 1] = 0;
-			pr_debug("fixed up name for %s -> %s\n", pathp,
+			printk(KERN_ERR "fixed up name for %s -> %s\n", pathp,
 				(char *)pp->value);
 		}
 	}
@@ -361,17 +362,18 @@ static void __unflatten_device_tree(struct boot_param_header *blob,
 	unsigned long start, mem, size;
 	struct device_node **allnextp = mynodes;
 
-	pr_debug(" -> unflatten_device_tree()\n");
+	printk(KERN_ERR ">>>>>>%s", __func__);
+	printk(KERN_ERR " -> unflatten_device_tree()\n");
 
 	if (!blob) {
-		pr_debug("No device tree pointer\n");
+		printk(KERN_ERR "No device tree pointer\n");
 		return;
 	}
 
-	pr_debug("Unflattening device tree:\n");
-	pr_debug("magic: %08x\n", be32_to_cpu(blob->magic));
-	pr_debug("size: %08x\n", be32_to_cpu(blob->totalsize));
-	pr_debug("version: %08x\n", be32_to_cpu(blob->version));
+	printk(KERN_ERR "Unflattening device tree:\n");
+	printk(KERN_ERR "magic: %08x\n", be32_to_cpu(blob->magic));
+	printk(KERN_ERR "size: %08x\n", be32_to_cpu(blob->totalsize));
+	printk(KERN_ERR "version: %08x\n", be32_to_cpu(blob->version));
 
 	if (be32_to_cpu(blob->magic) != OF_DT_HEADER) {
 		pr_err("Invalid device tree blob header\n");
@@ -384,7 +386,7 @@ static void __unflatten_device_tree(struct boot_param_header *blob,
 	size = unflatten_dt_node(blob, 0, &start, NULL, NULL, 0);
 	size = (size | 3) + 1;
 
-	pr_debug("  size is %lx, allocating...\n", size);
+	printk(KERN_ERR "  size is %lx, allocating...\n", size);
 
 	/* Allocate memory for the expanded device tree */
 	mem = (unsigned long)
@@ -392,7 +394,7 @@ static void __unflatten_device_tree(struct boot_param_header *blob,
 
 	((__be32 *)mem)[size / 4] = cpu_to_be32(0xdeadbeef);
 
-	pr_debug("  unflattening %lx...\n", mem);
+	printk(KERN_ERR "  unflattening %lx...\n", mem);
 
 	/* Second pass, do actual unflattening */
 	start = ((unsigned long)blob) +
@@ -405,7 +407,8 @@ static void __unflatten_device_tree(struct boot_param_header *blob,
 			   be32_to_cpu(((__be32 *)mem)[size / 4]));
 	*allnextp = NULL;
 
-	pr_debug(" <- unflatten_device_tree()\n");
+	printk(KERN_ERR " <- unflatten_device_tree()\n");
+	printk(KERN_ERR "<<<<<<<%s", __func__);
 }
 
 static void *kernel_tree_alloc(u64 size, u64 align)
@@ -710,11 +713,13 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
  */
 void __init unflatten_device_tree(void)
 {
+	printk(KERN_ERR ">>>>>>%s", __func__);
 	__unflatten_device_tree(initial_boot_params, &allnodes,
 				early_init_dt_alloc_memory_arch);
 
 	/* Get pointer to "/chosen" and "/aliasas" nodes for use everywhere */
 	of_alias_scan(early_init_dt_alloc_memory_arch);
+	printk(KERN_ERR "<<<<<<<%s", __func__);
 }
 
 #endif /* CONFIG_OF_EARLY_FLATTREE */

@@ -974,7 +974,9 @@ void __init setup_arch(char **cmdline_p)
 	if (mdesc->restart)
 		arm_pm_restart = mdesc->restart;
 
+	printk(KERN_ERR "-----------------WILL UNFLATTEN DT");
 	unflatten_device_tree();
+	printk(KERN_ERR "-----------------JUST UNFLATTENED DT");
 
 #ifdef CONFIG_SMP
 	if (is_smp())
