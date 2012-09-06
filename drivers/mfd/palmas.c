@@ -348,6 +348,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 	int slave;
 	struct mfd_cell *children;
 
+	printk(KERN_ERR "~~~~~~~~~~~~~PALMAS%s", __func__);
 	pdata = dev_get_platdata(&i2c->dev);
 
 	if(node && !pdata) {
@@ -359,6 +360,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 		palmas_dt_to_pdata(node, pdata);
 	}
 
+	printk(KERN_ERR "~~~~~~~HERE1");
 	if (!pdata)
 		return -EINVAL;
 
@@ -371,6 +373,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 	palmas->id = id->driver_data;
 	palmas->irq = i2c->irq;
 
+	printk(KERN_ERR "~~~~~~~HERE2");
 	for (i = 0; i < PALMAS_NUM_CLIENTS; i++) {
 		if (i == 0)
 			palmas->i2c_clients[i] = i2c;
@@ -396,6 +399,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 		}
 	}
 
+	printk(KERN_ERR "~~~~~~~HERE3");
 	/* Change IRQ into clear on read mode for efficiency */
 	slave = PALMAS_BASE_TO_SLAVE(PALMAS_INTERRUPT_BASE);
 	addr = PALMAS_BASE_TO_REG(PALMAS_INTERRUPT_BASE, PALMAS_INT_CTRL);
@@ -411,9 +415,11 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 	ret = regmap_add_irq_chip(palmas->dev, palmas->regmap[slave], palmas->irq,
 			IRQF_ONESHOT, base_irq, &palmas_irq_chip,
 			&palmas->irq_data);
+	printk(KERN_ERR "~~~~~~ret=%d", ret);
 	if (ret < 0)
 		goto err;
 
+	printk(KERN_ERR "~~~~~~~HERE4");
 	slave = PALMAS_BASE_TO_SLAVE(PALMAS_PU_PD_OD_BASE);
 	addr = PALMAS_BASE_TO_REG(PALMAS_PU_PD_OD_BASE,
 			PALMAS_PRIMARY_SECONDARY_PAD1);
@@ -429,6 +435,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 			goto err_irq;
 	}
 
+	printk(KERN_ERR "~~~~~~~HERE5");
 	if (!(reg & PALMAS_PRIMARY_SECONDARY_PAD1_GPIO_0))
 		palmas->gpio_muxed |= PALMAS_GPIO_0_MUXED;
 	if (!(reg & PALMAS_PRIMARY_SECONDARY_PAD1_GPIO_1_MASK))
@@ -453,6 +460,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 	addr = PALMAS_BASE_TO_REG(PALMAS_PU_PD_OD_BASE,
 			PALMAS_PRIMARY_SECONDARY_PAD2);
 
+	printk(KERN_ERR "~~~~~~~HERE5");
 	if (pdata->mux_from_pdata) {
 		reg = pdata->pad2;
 		ret = regmap_write(palmas->regmap[slave], addr, reg);
@@ -479,6 +487,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 
 	reg = pdata->power_ctrl;
 
+	printk(KERN_ERR "~~~~~~~HERE6");
 	slave = PALMAS_BASE_TO_SLAVE(PALMAS_PMU_CONTROL_BASE);
 	addr = PALMAS_BASE_TO_REG(PALMAS_PMU_CONTROL_BASE, PALMAS_POWER_CTRL);
 
@@ -490,6 +499,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 	 * If we are probing with DT do this the DT way and return here
 	 * otherwise continue and add devices using mfd helpers.
 	 */
+	 printk(KERN_ERR "~~~~~~~HERE7");
 	if (node) {
 		ret = of_platform_populate(node, NULL, NULL, &i2c->dev);
 		if (ret < 0)
@@ -498,6 +508,7 @@ static int __devinit palmas_i2c_probe(struct i2c_client *i2c,
 			return ret;
 	}
 
+	printk(KERN_ERR "~~~~~~~HERE8");
 	children = kmemdup(palmas_children, sizeof(palmas_children),
 			   GFP_KERNEL);
 	if (!children) {
@@ -570,6 +581,7 @@ static struct i2c_driver palmas_i2c_driver = {
 
 static int __init palmas_i2c_init(void)
 {
+	printk(KERN_ERR "~~~~~~~~~~~~~PALMAS%s", __func__);
 	return i2c_add_driver(&palmas_i2c_driver);
 }
 /* init early so consumer devices can complete system boot */

@@ -890,6 +890,7 @@ static __devinit int palmas_probe(struct platform_device *pdev)
 	int id = 0, irq, ret;
 	unsigned int addr, reg;
 
+	printk(KERN_ERR "++++++++++++++[%s]", __func__);
 	if(node && !pdata) {
 		pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
 
@@ -1032,6 +1033,7 @@ static __devinit int palmas_probe(struct platform_device *pdev)
 
 		/* Register the regulators */
 		pmic->desc[id].name = palmas_regs_info[id].name;
+		printk(KERN_ERR "++++++++++++++REGISTER[%s]", pmic->desc[id].name);
 		pmic->desc[id].id = id;
 		pmic->desc[id].n_voltages = PALMAS_LDO_NUM_VOLTAGES;
 
@@ -1105,6 +1107,7 @@ static struct platform_driver palmas_driver = {
 
 static int __init palmas_init(void)
 {
+	printk(KERN_ERR "++++++++++++++[%s]", __func__);
 	return platform_driver_register(&palmas_driver);
 }
 subsys_initcall(palmas_init);
