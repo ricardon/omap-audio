@@ -664,17 +664,51 @@ static int platform_match(struct device *dev, struct device_driver *drv)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	struct platform_driver *pdrv = to_platform_driver(drv);
+	int ret, my_match = 0;
+
+	if (!strcmp(drv->name, "omapdss_hdmi"))
+		printk(KERN_ERR "~~~~matching DRV[%s]DEV[%s]", drv->name, pdev->name);
+
+	if (!strcmp(drv->name, "palmas-pmic"))
+		printk(KERN_ERR "~~~~matching DRV[%s]DEV[%s]", drv->name, pdev->name);
 
 	/* Attempt an OF style match first */
-	if (of_driver_match_device(dev, drv))
-		return 1;
+	if (of_driver_match_device(dev, drv)) {
+		ret = 1;
+		if (!strcmp(drv->name, "omapdss_hdmi"))
+			my_match = 1;
+		if (!strcmp(drv->name, "palmas-pmic"))
+			my_match = 2;
+		goto out;
+	}
 
 	/* Then try to match against the id table */
-	if (pdrv->id_table)
-		return platform_match_id(pdrv->id_table, pdev) != NULL;
+	if (pdrv->id_table) {
+		ret = platform_match_id(pdrv->id_table, pdev) != NULL;
+		if (ret) {
+			if (!strcmp(drv->name, "omapdss_hdmi"))
+				my_match = 3;
+			if (!strcmp(drv->name, "palmas-pmic"))
+				my_match = 4;
+		}
+		goto out;
+	}
 
 	/* fall-back to driver name match */
-	return (strcmp(pdev->name, drv->name) == 0);
+	ret = (strcmp(pdev->name, drv->name) == 0);
+	if (ret) {
+		if (!strcmp(drv->name, "omapdss_hdmi"))
+			my_match = 5;
+		if (!strcmp(drv->name, "palmas-pmic"))
+			my_match = 6;
+		goto out;
+	}
+
+out:
+	if (my_match)
+		printk(KERN_ERR "~~~~~MATCH![%d][%s][%s]", my_match, drv->name, pdev->name);
+	return ret;
+
 }
 
 #ifdef CONFIG_PM_SLEEP

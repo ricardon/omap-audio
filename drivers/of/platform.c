@@ -234,6 +234,7 @@ struct platform_device *of_platform_device_create(struct device_node *np,
 					    const char *bus_id,
 					    struct device *parent)
 {
+	printk(KERN_ERR "!!!!!!!!!!!!!!!!!%s", __func__);
 	return of_platform_device_create_pdata(np, bus_id, NULL, parent);
 }
 EXPORT_SYMBOL(of_platform_device_create);

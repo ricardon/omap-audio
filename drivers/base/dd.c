@@ -441,6 +441,7 @@ static int __driver_attach(struct device *dev, void *data)
 	 * is an error.
 	 */
 
+	//printk(KERN_ERR "~~~~~~MATCH[%s][%s]", drv->name, pdev->name);
 	if (!driver_match_device(drv, dev))
 		return 0;
 
