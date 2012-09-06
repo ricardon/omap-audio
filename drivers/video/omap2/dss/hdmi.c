@@ -1203,28 +1203,29 @@ static int __init hdmi_probe_of(struct platform_device *pdev)
 	gpio = of_get_gpio(node, 0);
 	if (gpio_is_valid(gpio)) {
 		hdmi.ct_cp_hpd_gpio = gpio;
+		printk(KERN_ERR "+++++++CT_CP_HPD[%d]", gpio);
 	} else {
 		DSSERR("failed to parse CT CP HPD gpio\n");
 		return -ENODEV;
 	}
 
-	/* FIXME: Need to add IO expander configuration here */
-	if (cpu_is_omap44xx()) {
-		gpio = of_get_gpio(node, 1);
-		if (gpio_is_valid(gpio)) {
-			hdmi.ls_oe_gpio = gpio;
-		} else {
-			DSSERR("failed to parse LS OE gpio\n");
-			return -ENODEV;
-		}
+	/* FIXME: Need to add IO expander configuration for OMAP5 here */
+	gpio = of_get_gpio(node, 1);
+	if (gpio_is_valid(gpio)) {
+		hdmi.ls_oe_gpio = gpio;
+		printk(KERN_ERR "++++++LS OE[%d]", gpio);
+	} else {
+		DSSERR("failed to parse LS OE gpio\n");
+		return -ENODEV;
+	}
 
-		gpio = of_get_gpio(node, 2);
-		if (gpio_is_valid(gpio)) {
-			hdmi.hpd_gpio = gpio;
-		} else {
-			DSSERR("failed to parse HPD gpio\n");
-			return -ENODEV;
-		}
+	gpio = of_get_gpio(node, 2);
+	if (gpio_is_valid(gpio)) {
+		hdmi.hpd_gpio = gpio;
+		printk(KERN_ERR "++++HPD[%d]", gpio);
+	} else {
+		DSSERR("failed to parse HPD gpio\n");
+		return -ENODEV;
 	}
 
 	for_each_child_of_node(node, child) {
