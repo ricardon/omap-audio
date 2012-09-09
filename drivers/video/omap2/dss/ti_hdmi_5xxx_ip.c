@@ -686,31 +686,48 @@ static void hdmi_core_enable_interrupts(struct hdmi_ip_data *ip_data)
 {
 	void __iomem *core_sys_base = hdmi_core_sys_base(ip_data);
 	/* Unmute interrupts */
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_MUTE, 0x0, 1, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_VP_MASK, 0x0, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_FC_MASK0, 0x0, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_FC_MASK1, 0x0, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_FC_MASK2, 0x0, 1, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_MUTE, 0x3, 1, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_VP_MASK, 0xff, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_FC_MASK0, 0xe7, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_FC_MASK1, 0xf8, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_FC_MASK2, 0x03, 1, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_PHY_MASK0, 0x0, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_PHY_I2CM_INT_ADDR, 0x8, 3, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_PHY_I2CM_CTLINT_ADDR, 0x88, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_PHY_I2CM_INT_ADDR, 0x0, 3, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_PHY_I2CM_CTLINT_ADDR, 0x0, 7, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_INT, 0xA3, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_CEC_MASK, 0x0, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_GP_MASK, 0x0, 1, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_CEC_MASK, 0xff, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_GP_MASK, 0x3, 1, 0);
 }
 
 int ti_hdmi_5xxx_irq_process(struct hdmi_ip_data *ip_data)
 {
 	void __iomem *core_sys_base = hdmi_core_sys_base(ip_data);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_FC_STAT0, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_FC_STAT1, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_FC_STAT2, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_AS_STAT0, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_PHY_STAT0, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_I2CM_STAT0, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_CEC_STAT0, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_VP_STAT0, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_I2CMPHY_STAT0, 0xff, 7, 0);
+#if 0
+	printk(KERN_ERR "VP_STAT[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_VP_STAT));
+	printk(KERN_ERR "FC_STAT0[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_FC_STAT0));
+	printk(KERN_ERR "FC_STAT1[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_FC_STAT1));
+	printk(KERN_ERR "FC_STAT2[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_FC_STAT2));
+	printk(KERN_ERR "AS_STAT0[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_AS_STAT0));
+	printk(KERN_ERR "PHY_STAT0[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_PHY_STAT0));
+	printk(KERN_ERR "I2CM_STAT0[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_I2CM_STAT0));
+	printk(KERN_ERR "CEC_STAT0[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_CEC_STAT0));
+	printk(KERN_ERR "VP_STAT0[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_VP_STAT0));
+	printk(KERN_ERR "I2CMPHY_STAT0[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_IH_I2CMPHY_STAT0));
+	printk(KERN_ERR "AUD_INT[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_AUD_INT));
+	printk(KERN_ERR "GP_STAT[0x%x]", hdmi_read_reg(core_sys_base, HDMI_CORE_GP_STAT));
+#endif
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_VP_STAT, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_FC_STAT0, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_FC_STAT1, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_FC_STAT2, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_AS_STAT0, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_PHY_STAT0, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_I2CM_STAT0, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_CEC_STAT0, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_VP_STAT0, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_IH_I2CMPHY_STAT0, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_INT, 0x00, 7, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_GP_STAT, 0x00, 7, 0);
 
 	return 0;
 }
