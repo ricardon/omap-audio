@@ -86,7 +86,7 @@ static inline int hdmi_wait_for_bit_change(void __iomem *base_addr,
 	u32 t = 0;
 	while (val != REG_GET(base_addr, idx, b2, b1)) {
 		udelay(1);
-		if (t++ > 10000)
+		if (t++ > 1000000)
 			return !val;
 	}
 	return val;
@@ -161,6 +161,11 @@ static int hdmi_pll_init(struct hdmi_ip_data *ip_data)
 /* PHY_PWR_CMD */
 static int hdmi_set_phy_pwr(struct hdmi_ip_data *ip_data, enum hdmi_phy_pwr val)
 {
+	enum hdmi_phy_pwr x;
+
+	x = REG_GET(hdmi_wp_base(ip_data), HDMI_WP_PWR_CTRL, 5, 4);
+
+	printk(KERN_ERR "~~~~POWER [%d]--->[%d]", x, val);
 	/* Return if already the state */
 	if (REG_GET(hdmi_wp_base(ip_data), HDMI_WP_PWR_CTRL, 5, 4) == val)
 		return 0;

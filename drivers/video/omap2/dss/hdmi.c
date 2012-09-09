@@ -545,10 +545,11 @@ static void hdmi_compute_pll(struct omap_dss_device *dssdev, int phy,
 
 static int hdmi_power_on(struct omap_dss_device *dssdev)
 {
-	int r;
+	int r = 0;
 	struct omap_video_timings *p;
 	unsigned long phy;
 
+	printk(KERN_ERR ">>>>>>HDMI power on");
 	if (cpu_is_omap44xx()) {
 		gpio_set_value(hdmi.ct_cp_hpd_gpio, 1);
 		gpio_set_value(hdmi.ls_oe_gpio, 1);
@@ -560,9 +561,15 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	udelay(300);
 
 	r = regulator_enable(hdmi.vdda_hdmi_dac_reg);
-	if (r)
+	if (r) {
+		printk(KERN_ERR "COULD NOT ENABLE REGULATOR[%d]", r);
 		goto err_vdac_enable;
+	}
 
+	printk(KERN_ERR "~~REGENABLED?[%d]",
+		regulator_is_enabled(hdmi.vdda_hdmi_dac_reg));
+	printk(KERN_ERR "~~REGEVOLTAGE?[%d]",
+		regulator_get_voltage(hdmi.vdda_hdmi_dac_reg));
 	r = hdmi_runtime_get();
 	if (r)
 		goto err_runtime_get;
@@ -619,6 +626,7 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	hdmi.ip_data.ops->video_configure(&hdmi.ip_data);
 
 	/* Make selection of HDMI in DSS */
+	printk(KERN_ERR "WILL SELCT SYNC SRC");
 	dss_select_hdmi_venc_clk_source(DSS_HDMI_M_PCLK);
 
 	/* Select the dispc clock source as PRCM clock, to ensure that it is not
@@ -627,7 +635,9 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	 * dynamically by user. This can be moved to single location , say
 	 * Boardfile.
 	 */
+	printk(KERN_ERR "WILL SELECT DISPC CLK");
 	dss_select_dispc_clk_source(dssdev->clocks.dispc.dispc_fclk_src);
+	printk(KERN_ERR "JUST SELECTED DISPC CLK");
 
 	/* bypass TV gamma table */
 	dispc_enable_gamma_table(0);
@@ -994,7 +1004,7 @@ static irqreturn_t hdmi_irq_handler(int irq, void *arg)
 	int r = 0;
 
 	r = hdmi.ip_data.ops->irq_handler(&hdmi.ip_data);
-	DSSDBG("Received HDMI IRQ = %08x\n", r);
+	//DSSDBG("Received HDMI IRQ = %08x\n", r);
 	r = hdmi.ip_data.ops->irq_process(&hdmi.ip_data);
 	return IRQ_HANDLED;
 }
