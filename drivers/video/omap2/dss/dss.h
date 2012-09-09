@@ -32,18 +32,18 @@ extern bool dss_debug;
 #ifdef DSS_SUBSYS_NAME
 #define DSSDBG(format, ...) \
 	if (dss_debug) \
-		printk(KERN_DEBUG "omapdss " DSS_SUBSYS_NAME ": " format, \
+		printk(KERN_ERR "omapdss " DSS_SUBSYS_NAME ": " format, \
 		## __VA_ARGS__)
 #else
 #define DSSDBG(format, ...) \
 	if (dss_debug) \
-		printk(KERN_DEBUG "omapdss: " format, ## __VA_ARGS__)
+		printk(KERN_ERR "omapdss: " format, ## __VA_ARGS__)
 #endif
 
 #ifdef DSS_SUBSYS_NAME
 #define DSSDBGF(format, ...) \
 	if (dss_debug) \
-		printk(KERN_DEBUG "omapdss " DSS_SUBSYS_NAME \
+		printk(KERN_ERR "omapdss " DSS_SUBSYS_NAME \
 				": %s(" format ")\n", \
 				__func__, \
 				## __VA_ARGS__)
