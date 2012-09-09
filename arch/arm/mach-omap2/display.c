@@ -593,14 +593,18 @@ static __init void hdmi_hack_init_of(void)
 			flags = OMAP_HDMI_SDA_SCL_EXTERNAL_PULLUP;
 		else
 			flags = 0;
+	} else if (of_machine_is_compatible("ti,omap5-evm")) {
+		hpd_gpio = 193;
 	} else {
 		return;
 	}
 
 	omap_hdmi_init(flags);
 
-	omap_mux_init_gpio(ls_oe_gpio, OMAP_PIN_OUTPUT);
-	omap_mux_init_gpio(ct_cp_hpd_gpio, OMAP_PIN_OUTPUT);
+	if(!of_machine_is_compatible("ti,omap5-evm")) {
+		omap_mux_init_gpio(ls_oe_gpio, OMAP_PIN_OUTPUT);
+		omap_mux_init_gpio(ct_cp_hpd_gpio, OMAP_PIN_OUTPUT);
+	}
 	omap_mux_init_gpio(hpd_gpio, OMAP_PIN_INPUT_PULLDOWN);
 }
 
