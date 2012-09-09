@@ -291,6 +291,11 @@ int ti_hdmi_4xxx_phy_enable(struct hdmi_ip_data *ip_data)
 	unsigned long pclk = ip_data->cfg.timings.pixel_clock;
 	u16 freqout = 1;
 
+	/* TODO: avoid CPU checks! */
+	/* enable divby2 */
+	if (soc_is_omap54xx())
+		REG_FLD_MOD(phy_base, HDMI_TXPHY_BIST_CONTROL, 1, 11, 11);
+
 	r = hdmi_set_phy_pwr(ip_data, HDMI_PHYPWRCMD_LDOON);
 
 	/*
@@ -352,11 +357,6 @@ int ti_hdmi_4xxx_phy_enable(struct hdmi_ip_data *ip_data)
 		hdmi_set_phy_pwr(ip_data, HDMI_PHYPWRCMD_OFF);
 		return r;
 	}
-
-	/* enable divby2 */
-	/* TODO: avoid CPU checks */
-	if (soc_is_omap54xx())
-		REG_FLD_MOD(phy_base, HDMI_TXPHY_BIST_CONTROL, 1, 11, 11);
 
 	return 0;
 }
