@@ -179,6 +179,7 @@ int pinctrl_dt_to_map(struct pinctrl *p)
 	phandle phandle;
 	struct device_node *np_config;
 
+	printk(KERN_ERR "[[[[[[[[[%s[%s]", __func__, p->dev->of_node->name);
 	/* CONFIG_OF enabled, p->dev not instantiated from DT */
 	if (!np) {
 		dev_dbg(p->dev, "no of_node; not parsing pinctrl DT\n");
@@ -191,11 +192,15 @@ int pinctrl_dt_to_map(struct pinctrl *p)
 	/* For each defined state ID */
 	for (state = 0; ; state++) {
 		/* Retrieve the pinctrl-* property */
+		printk(KERN_ERR "[[[[[[[[[[[[%s look for pinctrl-%d", __func__, state);
 		propname = kasprintf(GFP_KERNEL, "pinctrl-%d", state);
 		prop = of_find_property(np, propname, &size);
 		kfree(propname);
-		if (!prop)
+		if (!prop) {
+			printk(KERN_ERR "[[[[[[[[[[[[%s NOT FND!", __func__);
 			break;
+		}
+		printk(KERN_ERR "[[[[[[[[[[pinctrl-%d FOUND", state);
 		list = prop->value;
 		size /= sizeof(*list);
 
@@ -225,6 +230,7 @@ int pinctrl_dt_to_map(struct pinctrl *p)
 				ret = -EINVAL;
 				goto err;
 			}
+			printk(KERN_ERR "[[[[[[[[[CONFIG NODE [%s]", np_config->name);
 
 			/* Parse the node */
 			ret = dt_to_map_one_config(p, statename, np_config);

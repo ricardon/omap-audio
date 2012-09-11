@@ -594,7 +594,9 @@ static __init void hdmi_hack_init_of(void)
 		else
 			flags = 0;
 	} else if (of_machine_is_compatible("ti,omap5-evm")) {
+		printk(KERN_ERR "#########################       OMAP5!!!!!");
 		hpd_gpio = 193;
+		flags = 0;
 	} else {
 		return;
 	}

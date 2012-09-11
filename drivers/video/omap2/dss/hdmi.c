@@ -37,6 +37,7 @@
 #include <linux/slab.h>
 #include <video/omapdss.h>
 #include <linux/of_gpio.h>
+#include <linux/pinctrl/consumer.h>
 
 #include "ti_hdmi.h"
 #include "dss.h"
@@ -1290,10 +1291,21 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 	struct regulator *vdds_hdmi;
 #endif
 	int r;
+	struct pinctrl *pinctrl;
 
+#if 0
+	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(pinctrl)) {
+		printk(KERN_ERR "[[[[[[[[[ERROR WHILE GETTING PINCTRL IN HDMI");
+	} else {
+		printk(KERN_ERR "[[[[[[[[[SUCCESS WHILE GETTING PINCTRL IN HDMI");
+	}
+#endif
 	hdmi.pdev = pdev;
 
 	mutex_init(&hdmi.lock);
+
+	
 
 	/* TODO: implement error handling sequence */
 	/* HDMI wrapper memory remap */

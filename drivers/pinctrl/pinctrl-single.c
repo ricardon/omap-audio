@@ -180,16 +180,20 @@ static unsigned __maybe_unused pcs_readl(void __iomem *reg)
 
 static void __maybe_unused pcs_writeb(unsigned val, void __iomem *reg)
 {
+	printk(KERN_ERR "^^^^^^^^^^^^^^^^^^^^^^^^^^^^ PCS WRITEB");
 	writeb(val, reg);
 }
 
 static void __maybe_unused pcs_writew(unsigned val, void __iomem *reg)
 {
-	writew(val, reg);
+	printk(KERN_ERR "^^^^^^^^^^^^^^^^^^^^^^^^^^^^ PCS WRITEW r[0x%x]v[0x%x]", reg, val);
+	//writew(val, reg);
+	__raw_writew(val, reg);
 }
 
 static void __maybe_unused pcs_writel(unsigned val, void __iomem *reg)
 {
+	printk(KERN_ERR "^^^^^^^^^^^^^^^^^^^^^^^^^^^^ PCS WRITEL");
 	writel(val, reg);
 }
 
@@ -708,8 +712,11 @@ static int pcs_parse_one_pinctrl_entry(struct pcs_device *pcs,
 			val = be32_to_cpup(mux + index++);
 			vals[found].mask = val;
 		}
+		printk(KERN_ERR "pinctrl single b[0x%x]r[0x%x]v[0x%x]m[0x%x]",
+			pcs->base, vals[found].reg, vals[found].val, vals[found].mask);
 
 		pin = pcs_get_pin_by_offset(pcs, offset);
+		printk(KERN_ERR "PIN[0x%x]", pin);
 		if (pin < 0) {
 			dev_err(pcs->dev,
 				"could not add functions for %s %ux\n",
@@ -878,6 +885,7 @@ static int __devinit pcs_probe(struct platform_device *pdev)
 	struct pcs_device *pcs;
 	int ret;
 
+	printk(KERN_ERR "~~~~~~~~PCS PROBE!!!!");
 	match = of_match_device(pcs_of_match, &pdev->dev);
 	if (!match)
 		return -EINVAL;
@@ -920,6 +928,8 @@ static int __devinit pcs_probe(struct platform_device *pdev)
 
 	pcs->size = resource_size(pcs->res);
 	pcs->base = devm_ioremap(pcs->dev, pcs->res->start, pcs->size);
+	printk(KERN_ERR "PCS IOREMAP START[0x%x] SIZE[0x%x] BASE[0x%x]",
+		pcs->res->start, pcs->size, pcs->base);
 	if (!pcs->base) {
 		dev_err(pcs->dev, "could not ioremap\n");
 		return -ENODEV;

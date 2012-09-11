@@ -298,6 +298,9 @@
 				compatible = "ti,omap4-hdmi";
 				ti,hwmods = "dss_hdmi";
 				vdda_hdmi_dac-supply = <&ldo7_reg>;
+/*				pinctrl-names = "default";
+				pinctrl-0 = <&dss_hdmi_pin>;
+*/
 			};
 		};
 	};

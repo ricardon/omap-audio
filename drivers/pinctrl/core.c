@@ -605,6 +605,7 @@ static struct pinctrl *create_pinctrl(struct device *dev)
 	struct pinctrl_map const *map;
 	int ret;
 
+	printk(KERN_ERR "[[[[[[[[[[[[%s", __func__);
 	/*
 	 * create the state cookie holder struct pinctrl for each
 	 * mapping, this is what consumers will get when requesting
@@ -650,6 +651,7 @@ static struct pinctrl *pinctrl_get_locked(struct device *dev)
 {
 	struct pinctrl *p;
 
+	printk(KERN_ERR "[[[[[[[[[[[[%s", __func__);
 	if (WARN_ON(!dev))
 		return ERR_PTR(-EINVAL);
 
@@ -673,6 +675,7 @@ struct pinctrl *pinctrl_get(struct device *dev)
 	struct pinctrl *p;
 
 	mutex_lock(&pinctrl_mutex);
+	printk(KERN_ERR "[[[[[[[[[[[[%s", __func__);
 	p = pinctrl_get_locked(dev);
 	mutex_unlock(&pinctrl_mutex);
 
@@ -860,6 +863,7 @@ struct pinctrl *devm_pinctrl_get(struct device *dev)
 {
 	struct pinctrl **ptr, *p;
 
+	printk(KERN_ERR "[[[[[[[[[[[[%s", __func__);
 	ptr = devres_alloc(devm_pinctrl_release, sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
