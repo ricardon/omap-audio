@@ -137,8 +137,8 @@
 	tpd12s015 {
 		compatible = "ti,tpd12s015";
 
-		gpios = <&gpio5 19 0>,	/* 147, IO EXPANDER SCL*/
-			<&gpio5 20 0>,	/* 148, IO EXPANDER SDA*/
+		gpios = <&tca 0 0>,	/* TCA6424A P01, CT_CP_HDP */
+			<&tca 1 0>,	/* TCA6424A P00, LS_OE*/
 			<&gpio7 1 0>;	/* 193, HPD */
 
 		hdmi-monitor {
