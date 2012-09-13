@@ -552,17 +552,15 @@ static int hdmi_power_on(struct omap_dss_device *dssdev)
 	struct omap_video_timings *p;
 	unsigned long phy;
 
-#if 0
-	if (cpu_is_omap44xx()) {
+	if (gpio_cansleep(hdmi.ct_cp_hpd_gpio))
+		gpio_set_value_cansleep(hdmi.ct_cp_hpd_gpio, 1);
+	else
 		gpio_set_value(hdmi.ct_cp_hpd_gpio, 1);
+
+	if (gpio_cansleep(hdmi.ls_oe_gpio))
+		gpio_set_value_cansleep(hdmi.ls_oe_gpio, 1);
+	else
 		gpio_set_value(hdmi.ls_oe_gpio, 1);
-	} else {
-		/* for OMAP5, tell IO expander to set LS_OE and CT_CP_HPD */
-	}
-#else
-	gpio_set_value(hdmi.ct_cp_hpd_gpio, 1);
-	gpio_set_value(hdmi.ls_oe_gpio, 1);
-#endif
 
 	/* wait 300us after CT_CP_HPD for the 5V power output to reach 90% */
 	udelay(300);
@@ -669,17 +667,16 @@ err_pll_enable:
 err_runtime_get:
 	regulator_disable(hdmi.vdda_hdmi_dac_reg);
 err_vdac_enable:
-#if 0
-	if (cpu_is_omap44xx()) {
+	if (gpio_cansleep(hdmi.ct_cp_hpd_gpio))
+		gpio_set_value_cansleep(hdmi.ct_cp_hpd_gpio, 0);
+	else
 		gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
+
+	if (gpio_cansleep(hdmi.ls_oe_gpio))
+		gpio_set_value_cansleep(hdmi.ls_oe_gpio, 0);
+	else
 		gpio_set_value(hdmi.ls_oe_gpio, 0);
-	} else {
-		/* for OMAP5, tell IO expander to set LS_OE and CT_CP_HPD */
-	}
-#else
-	gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
-	gpio_set_value(hdmi.ls_oe_gpio, 0);
-#endif
+
 	return -EIO;
 }
 
@@ -702,17 +699,15 @@ static void hdmi_power_off(struct omap_dss_device *dssdev)
 
 	regulator_disable(hdmi.vdda_hdmi_dac_reg);
 
-#if 0
-	if (cpu_is_omap44xx()) {
+	if (gpio_cansleep(hdmi.ct_cp_hpd_gpio))
+		gpio_set_value_cansleep(hdmi.ct_cp_hpd_gpio, 0);
+	else
 		gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
+
+	if (gpio_cansleep(hdmi.ls_oe_gpio))
+		gpio_set_value_cansleep(hdmi.ls_oe_gpio, 0);
+	else
 		gpio_set_value(hdmi.ls_oe_gpio, 0);
-	} else {
-		/* for OMAP5, tell IO expander to set LS_OE and CT_CP_HPD */
-	}
-#else
-	gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
-	gpio_set_value(hdmi.ls_oe_gpio, 0);
-#endif
 }
 
 int omapdss_hdmi_set_deepcolor(struct omap_dss_device *dssdev, int val,
