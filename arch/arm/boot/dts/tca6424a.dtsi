@@ -11,10 +11,10 @@
  */
 &tca {
 	compatible = "ti,tca6424a";
+	gpio-controller;
+	#gpio-cells = <2>;
 
 	tca_gpio: gpio {
 		compatible = "ti,tca6424a-gpio";
-		gpio-controller;
-		#gpio-cells = <1>;
 	};
 };
