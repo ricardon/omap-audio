@@ -36,6 +36,7 @@
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
 #include <video/omapdss.h>
+#include <linux/of_gpio.h>
 
 #include "ti_hdmi.h"
 #include "dss.h"
@@ -1160,8 +1161,7 @@ static int __init hdmi_probe_of(struct platform_device *pdev)
 {
 	struct device_node *node = pdev->dev.of_node;
 	struct device_node *child;
-	int r;
-	u32 v;
+	int r, gpio;
 
 	node = of_find_compatible_node(node, NULL, "ti,tpd12s015");
 
@@ -1170,23 +1170,37 @@ static int __init hdmi_probe_of(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	r = of_property_read_u32(node, "ct-cp-hpd-gpio", &v);
-	if (r)
-		printk("ct-cp-hpd-gpio fail\n");
+	if (of_gpio_count(node) != 3) {
+		DSSERR("wrong number of GPIOs[%d]\n", of_gpio_count(node));
+		return -ENODEV;
+	}
 
-	hdmi.ct_cp_hpd_gpio = v;
+	gpio = of_get_gpio(node, 0);
+	if (gpio_is_valid(gpio)) {
+		hdmi.ct_cp_hpd_gpio = gpio;
+		printk(KERN_ERR "+++++++CT_CP_HPD[%d]", gpio);
+	} else {
+		DSSERR("failed to parse CT CP HPD gpio\n");
+		return -ENODEV;
+	}
 
-	r = of_property_read_u32(node, "ls-oe-gpio", &v);
-	if (r)
-		printk("ls-oe-gpio fail\n");
+	gpio = of_get_gpio(node, 1);
+	if (gpio_is_valid(gpio)) {
+		hdmi.ls_oe_gpio = gpio;
+		printk(KERN_ERR "++++++LS OE[%d]", gpio);
+	} else {
+		DSSERR("failed to parse LS OE gpio\n");
+		return -ENODEV;
+	}
 
-	hdmi.ls_oe_gpio = v;
-
-	r = of_property_read_u32(node, "hpd-gpio", &v);
-	if (r)
-		printk("hpd-gpio fail\n");
-
-	hdmi.hpd_gpio = v;
+	gpio = of_get_gpio(node, 2);
+	if (gpio_is_valid(gpio)) {
+		hdmi.hpd_gpio = gpio;
+		printk(KERN_ERR "++++HPD[%d]", gpio);
+	} else {
+		DSSERR("failed to parse HPD gpio\n");
+		return -ENODEV;
+	}
 
 	for_each_child_of_node(node, child) {
 		struct omap_dss_device *dssdev;
