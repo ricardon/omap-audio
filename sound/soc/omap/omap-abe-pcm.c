@@ -338,7 +338,7 @@ static void enable_be_port(struct snd_soc_pcm_runtime *be,
 static void enable_fe_port(struct snd_pcm_substream *substream,
 		struct snd_soc_dai *dai, int stream)
 {
-	struct snd_soc_pcm_runtime *fe = substream->rtd;
+	struct snd_soc_pcm_runtime *fe = substream->private_data;
 	struct omap_abe *abe = snd_soc_dai_get_drvdata(dai);
 
 	dev_dbg(fe->dev, "%s: %s %d\n", __func__, dai->name, stream);
@@ -427,7 +427,7 @@ static void disable_be_port(struct snd_soc_pcm_runtime *be,
 static void disable_fe_port(struct snd_pcm_substream *substream,
 		struct snd_soc_dai *dai, int stream)
 {
-	struct snd_soc_pcm_runtime *fe = substream->rtd;
+	struct snd_soc_pcm_runtime *fe = substream->private_data;
 	struct omap_abe *abe = snd_soc_dai_get_drvdata(dai);
 
 	dev_dbg(fe->dev, "%s: %s %d\n", __func__, dai->name, stream);
@@ -549,7 +549,7 @@ static void mute_fe_port_playback(struct snd_soc_pcm_runtime *fe, struct snd_soc
 static void mute_fe_port(struct snd_pcm_substream *substream,
 		struct snd_soc_dai *dai, int stream)
 {
-	struct snd_soc_pcm_runtime *fe = substream->rtd;
+	struct snd_soc_pcm_runtime *fe = substream->private_data;
 
 	dev_dbg(fe->dev, "%s: %s %d\n", __func__, dai->name, stream);
 
@@ -562,7 +562,7 @@ static void mute_fe_port(struct snd_pcm_substream *substream,
 static void unmute_fe_port(struct snd_pcm_substream *substream,
 		struct snd_soc_dai *dai, int stream)
 {
-	struct snd_soc_pcm_runtime *fe = substream->rtd;
+	struct snd_soc_pcm_runtime *fe = substream->private_data;
 
 	dev_dbg(fe->dev, "%s: %s %d\n", __func__, dai->name, stream);
 
@@ -575,7 +575,7 @@ static void unmute_fe_port(struct snd_pcm_substream *substream,
 static void capture_trigger(struct snd_pcm_substream *substream,
 		struct snd_soc_dai *dai, int cmd)
 {
-	struct snd_soc_pcm_runtime *fe = substream->rtd;
+	struct snd_soc_pcm_runtime *fe = substream->private_data;
 	struct snd_soc_dpcm *dpcm;
 	struct snd_pcm_substream *be_substream;
 	int stream = substream->stream;
@@ -702,7 +702,7 @@ static void capture_trigger(struct snd_pcm_substream *substream,
 static void playback_trigger(struct snd_pcm_substream *substream,
 		struct snd_soc_dai *dai, int cmd)
 {
-	struct snd_soc_pcm_runtime *fe = substream->rtd;
+	struct snd_soc_pcm_runtime *fe = substream->private_data;
 	struct snd_soc_dpcm *dpcm;
 	struct snd_pcm_substream *be_substream;
 	int stream = substream->stream;

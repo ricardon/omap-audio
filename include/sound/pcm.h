@@ -367,7 +367,6 @@ struct snd_pcm_group {		/* keep linked substreams */
 };
 
 struct pid;
-struct snd_soc_pcm_runtime;
 
 struct snd_pcm_substream {
 	struct snd_pcm *pcm;
@@ -414,9 +413,6 @@ struct snd_pcm_substream {
 	struct snd_info_entry *proc_prealloc_entry;
 	struct snd_info_entry *proc_prealloc_max_entry;
 #endif
-	/* -- ASoC -- */
-	struct snd_soc_pcm_runtime *rtd;
-
 	/* misc flags */
 	unsigned int hw_opened: 1;
 	unsigned int hw_no_buffer: 1; /* substream may not have a buffer */

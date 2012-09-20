@@ -103,7 +103,7 @@ static int omap_abe_hwrule_period_step(struct snd_pcm_hw_params *params,
 
 static int aess_open(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->rtd;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_platform *platform = rtd->platform;
 	struct omap_abe *abe = snd_soc_platform_get_drvdata(platform);
 	struct snd_soc_dai *dai = rtd->cpu_dai;
@@ -157,7 +157,7 @@ out:
 static int aess_hw_params(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->rtd;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct snd_soc_platform *platform = rtd->platform;
 	struct omap_abe *abe = snd_soc_platform_get_drvdata(platform);
@@ -212,7 +212,7 @@ out:
 
 static int aess_prepare(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->rtd;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_platform *platform = rtd->platform;
 	struct omap_abe *abe = snd_soc_platform_get_drvdata(platform);
 	struct snd_soc_dai *dai = rtd->cpu_dai;
@@ -233,7 +233,7 @@ static int aess_prepare(struct snd_pcm_substream *substream)
 
 static int aess_close(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->rtd;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_platform *platform = rtd->platform;
 	struct omap_abe *abe = snd_soc_platform_get_drvdata(platform);
 	struct snd_soc_dai *dai = rtd->cpu_dai;
@@ -263,7 +263,7 @@ static int aess_close(struct snd_pcm_substream *substream)
 static int aess_mmap(struct snd_pcm_substream *substream,
 	struct vm_area_struct *vma)
 {
-	struct snd_soc_pcm_runtime  *rtd = substream->rtd;
+	struct snd_soc_pcm_runtime  *rtd = substream->private_data;
 	struct snd_soc_dai *dai = rtd->cpu_dai;
 	int offset, size, err;
 
@@ -287,7 +287,7 @@ static int aess_mmap(struct snd_pcm_substream *substream,
 
 static snd_pcm_uframes_t aess_pointer(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->rtd;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_platform *platform = rtd->platform;
 	struct omap_abe *abe = snd_soc_platform_get_drvdata(platform);
 	snd_pcm_uframes_t offset = 0;
