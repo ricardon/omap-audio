@@ -49,6 +49,14 @@
 			"40124000.mcbsp Playback", "MM_EXT_DL",
 			"MM_EXT_UL", "40124000.mcbsp Capture";
 	};
+
+	sound_hdmi {
+		compatible = "ti,omap-hdmi-audio";
+		ti,model = "OMAP5HDMI";
+
+		ti,hdmi_audio = <&hdmi_audio>;
+		ti,level_shifter = <&tpd12s015>;
+	};
 };
 
 &i2c1 {
@@ -76,7 +84,8 @@
 
 &pad_core_mux {
 	pinctrl-names = "default";
-	pinctrl-0 = <&audio_core_pin>;
+	pinctrl-0 = <&audio_core_pin>,
+		    <&dss_hdmi_pin>;
 
 	audio_core_pin: audio_core_pins {
 				/* TRM offset - 0x40, bits, mask */
@@ -86,6 +95,10 @@
 				      <0x160 0x0400 0x041f>, /* ABEMCPDM_FRAME */
 				      <0x162 0x0000 0x041f>, /* ABEMCPDM_LB_CLK */
 				      <0x17e 0x000e 0x041f>; /* GPIO5 141 */
+	};
+
+	dss_hdmi_pin: dss_hdmi_pins {
+		pinctrl-single,bits = <0xfe 0x000e 0x041f>; /* GPIO 193 */
 	};
 };
 
@@ -99,5 +112,26 @@
 	};
 };
 
+&i2c5 {
+	tca: tca@22 {
+		reg = <0x22>;
+	};
+};
+
+&hdmi {
+	tpd12s015: tpd12s015 {
+		compatible = "ti,tpd12s015";
+
+		gpios = <&tca 0 0>,	/* TCA6424A P01, CT_CP_HDP */
+			<&tca 1 0>,	/* TCA6424A P00, LS_OE*/
+			<&gpio7 1 0>;	/* 193, HPD */
+
+		hdmi-monitor {
+			compatible = "ti,hdmi_panel";
+		};
+
+	};
+};
 /include/ "palmas.dtsi"
 /include/ "twl6040.dtsi"
+/include/ "tca6424a.dtsi"
