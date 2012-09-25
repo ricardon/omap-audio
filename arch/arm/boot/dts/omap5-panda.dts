@@ -98,7 +98,9 @@
 	};
 
 	dss_hdmi_pin: dss_hdmi_pins {
-		pinctrl-single,bits = <0xfe 0x000e 0x041f>; /* GPIO 193 */
+		pinctrl-single,bits = <0xfe 0x000e 0x041f>, /* GPIO 193 */
+				      <0x186 0x0018 0x041f>, /* I2C5 SCL */
+				      <0x188 0x0018 0x041f>; /* I2C5 SDA */
 	};
 };
 
