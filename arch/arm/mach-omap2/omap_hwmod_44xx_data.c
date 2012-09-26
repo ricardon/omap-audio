@@ -4951,9 +4951,15 @@ static struct omap_hwmod_ocp_if omap44xx_l4_abe__mcasp = {
 
 static struct omap_hwmod_addr_space omap44xx_mcasp_dma_addrs[] = {
 	{
+		.name		= "cfg",
 		.pa_start	= 0x49028000,
 		.pa_end		= 0x490283ff,
 		.flags		= ADDR_TYPE_RT
+	},
+	{
+		.name		= "dat",
+		.pa_start	= 0x4902A000,
+		.pa_end		= 0x4902Afff,
 	},
 	{ }
 };
