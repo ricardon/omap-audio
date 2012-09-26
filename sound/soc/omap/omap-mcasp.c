@@ -226,10 +226,8 @@
 static struct omap_pcm_dma_data omap_mcasp_dai_dma_params[] = {
 	{
 		.name = "Audio playback",
-		.dma_req = OMAP44XX_DMA_MCASP1_AXEVT,
 		.data_type = OMAP_DMA_DATA_TYPE_S16,
 		.sync_mode = OMAP_DMA_SYNC_ELEMENT,
-		.port_addr = OMAP44XX_MCASP_DAT_BASE + OMAP_MCASP_TXBUF0_REG,
 	},
 };
 
@@ -608,7 +606,7 @@ static __devinit int omap_mcasp_probe(struct platform_device *pdev)
 	struct omap_mcasp *mcasp;
 	struct resource *res;
 	long fclk_rate;
-	int ret = 0;
+	int ret = 0, i;
 
 	mcasp = devm_kzalloc(&pdev->dev, sizeof(struct omap_mcasp), GFP_KERNEL);
 	if (!mcasp) {
@@ -618,9 +616,9 @@ static __devinit int omap_mcasp_probe(struct platform_device *pdev)
 
 	spin_lock_init(&mcasp->lock);
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
 	if (!res) {
-		dev_err(&pdev->dev, "no resource\n");
+		dev_err(&pdev->dev, "no cfg resource\n");
 		return -ENODEV;
 	}
 
@@ -632,6 +630,25 @@ static __devinit int omap_mcasp_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "cannot remap\n");
 		return -ENOMEM;
 	}
+
+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dat");
+	if (!res) {
+		dev_err(&pdev->dev, "no dat resource\n");
+		return -ENODEV;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(omap_mcasp_dai_dma_params); i++)
+		omap_mcasp_dai_dma_params[i].port_addr =
+					res->start + OMAP_MCASP_TXBUF0_REG;
+
+	res = platform_get_resource(pdev, IORESOURCE_DMA, 0);
+	if (!res) {
+		dev_err(&pdev->dev, "no DMA resource\n");
+		return -ENODEV;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(omap_mcasp_dai_dma_params); i++)
+		omap_mcasp_dai_dma_params[i].dma_req = res->start;
 
 	mcasp->irq = platform_get_irq(pdev, 0);
 	if (mcasp->irq < 0) {
