@@ -627,21 +627,23 @@ static __devinit int omap_mcasp_probe(struct platform_device *pdev)
 	if (!request_mem_region(res->start, resource_size(res), "McASP"))
 		return -EBUSY;
 
-	mcasp->base = ioremap(res->start, resource_size(res));
-	if (!mcasp->base)
+	mcasp->base = devm_ioremap(&pdev->dev, res->start, resource_size(res));
+	if (!mcasp->base) {
+		dev_err(&pdev->dev, "cannot remap\n");
 		return -ENOMEM;
+	}
 
 	mcasp->irq = platform_get_irq(pdev, 0);
 	if (mcasp->irq < 0) {
-		ret = mcasp->irq;
-		goto err_irq;
+		dev_err(&pdev->dev, "invalid IRQ number\n");
+		return mcasp->irq;
 	}
 
 	ret = request_threaded_irq(mcasp->irq, NULL, omap_mcasp_irq_handler,
 				IRQF_ONESHOT, "McASP", mcasp);
 	if (ret) {
 		dev_err(mcasp->dev, "IRQ request failed\n");
-		goto err_irq;
+		return ret;
 	}
 
 	mcasp->fclk = clk_get(&pdev->dev, "mcasp_fck");
@@ -672,8 +674,6 @@ err_dai:
 	pm_runtime_disable(&pdev->dev);
 err_clk:
 	free_irq(mcasp->irq, (void *)mcasp);
-err_irq:
-	iounmap(mcasp->base);
 	return ret;
 }
 
@@ -685,7 +685,6 @@ static __devexit int omap_mcasp_remove(struct platform_device *pdev)
 	pm_runtime_disable(&pdev->dev);
 	clk_put(mcasp->fclk);
 	free_irq(mcasp->irq, (void *)mcasp);
-	iounmap(mcasp->base);
 
 	return 0;
 }
