@@ -322,12 +322,6 @@
 				vdda_hdmi_dac-supply = <&ldo7_reg>;
 				video-source = <1>;
 			};
-
-			/* TODO: Reuse the hdmi node for audio as well */
-			hdmi_audio: hdmi_audio {
-				compatible = "ti,omap4-hdmi-audio";
-				ti,hwmods = "dss_hdmi";
-			};
 		};
 	};
 };
