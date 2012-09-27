@@ -74,7 +74,7 @@
 		compatible = "ti,omap-hdmi-audio";
 		ti,model = "OMAP5HDMI";
 
-		ti,hdmi_audio = <&hdmi_audio>;
+		ti,hdmi_audio = <&hdmi>;
 		ti,level_shifter = <&tpd12s015>;
 	};
 };
