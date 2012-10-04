@@ -665,6 +665,9 @@ static int platform_match(struct device *dev, struct device_driver *drv)
 	struct platform_device *pdev = to_platform_device(dev);
 	struct platform_driver *pdrv = to_platform_driver(drv);
 
+	if (!strcmp(drv->name, "omap-hdmi-audio-dai"))
+		printk(KERN_ERR "~~matching[%s][%s]", drv->name, pdev->name);
+
 	/* Attempt an OF style match first */
 	if (of_driver_match_device(dev, drv))
 		return 1;

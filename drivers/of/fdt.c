@@ -9,6 +9,7 @@
  * version 2 as published by the Free Software Foundation.
  */
 
+#define DEBUG
 #include <linux/kernel.h>
 #include <linux/initrd.h>
 #include <linux/module.h>

@@ -36,6 +36,7 @@
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
 #include <linux/of_gpio.h>
+#include <linux/of_platform.h>
 #include <video/omapdss.h>
 
 #include "ti_hdmi.h"
@@ -1284,6 +1285,8 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 		dss_put_device(dssdev);
 		return;
 	}
+
+	of_platform_populate(pdev->dev.of_node, NULL, NULL, &pdev->dev);
 }
 
 /* HDMI HW IP initialisation */

@@ -269,6 +269,8 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 	struct hdmi_priv *hdmi_data;
 	bool hdmi_dev_found = false;
 
+	printk(KERN_ERR "~~~~~PROBE!!!!!!!!");
+
 	hdmi_data = devm_kzalloc(&pdev->dev, sizeof(*hdmi_data), GFP_KERNEL);
 	if (hdmi_data == NULL) {
 		dev_err(&pdev->dev, "Cannot allocate memory for HDMI data\n");
@@ -321,6 +323,8 @@ static __devinit int omap_hdmi_probe(struct platform_device *pdev)
 
 	dev_set_drvdata(&pdev->dev, hdmi_data);
 	ret = snd_soc_register_dai(&pdev->dev, &omap_hdmi_dai);
+
+	printk(KERN_ERR "~~~~~PROBE0!!!!!!!!");
 
 	return ret;
 }

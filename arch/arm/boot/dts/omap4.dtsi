@@ -138,9 +138,16 @@
 
 			hdmi: hdmi {
 				compatible = "ti,omap4-hdmi";
+				#address-cells = <1>;
+				#size-cells = <0>;
 				ti,hwmods = "dss_hdmi";
 				vdda_hdmi_dac-supply = <&vdac>;
 				video-source = <1>;
+				audio {
+					compatible = "ti,omap4-hdmi-audio";
+					reg = <0x58006000 0x200>;
+					ti,hwmods = "dss_hdmi";
+				};
 			};
 		};
 
