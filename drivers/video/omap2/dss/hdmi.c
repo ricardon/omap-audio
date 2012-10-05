@@ -1091,7 +1091,7 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 	}
 
 	/* Base address taken from platform */
-	hdmi.ip_data.base_wp = ioremap(res->start, resource_size(res));
+	hdmi.ip_data.base_wp = devm_request_and_ioremap(&pdev->dev, res);
 	if (!hdmi.ip_data.base_wp) {
 		DSSERR("can't ioremap WP\n");
 		return -ENOMEM;
@@ -1099,7 +1099,7 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 
 	r = hdmi_get_clocks(pdev);
 	if (r) {
-		iounmap(hdmi.ip_data.base_wp);
+		DSSERR("can't get clocks\n");
 		return r;
 	}
 
@@ -1146,8 +1146,6 @@ static int __exit omapdss_hdmihw_remove(struct platform_device *pdev)
 	pm_runtime_disable(&pdev->dev);
 
 	hdmi_put_clocks();
-
-	iounmap(hdmi.ip_data.base_wp);
 
 	return 0;
 }
