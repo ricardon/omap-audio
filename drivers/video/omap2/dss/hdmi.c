@@ -60,6 +60,9 @@
 static struct {
 	struct mutex lock;
 	struct platform_device *pdev;
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+	struct platform_device *audio_pdev;
+#endif
 
 	struct hdmi_ip_data ip_data;
 
@@ -72,6 +75,13 @@ static struct {
 
 	struct omap_dss_output output;
 } hdmi;
+
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+#define HDMI_AUDIO_MEM_RESOURCE 0
+#define HDMI_AUDIO_DMA_RESOURCE 1
+static struct resource hdmi_aud_res[2];
+#endif
+
 
 /*
  * Logic for the below structure :
@@ -765,6 +775,50 @@ static void hdmi_put_clocks(void)
 }
 
 #if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+static int hdmi_probe_audio(struct platform_device *pdev)
+{
+	struct resource *res;
+
+	hdmi.audio_pdev = ERR_PTR(-EINVAL);
+
+	res = platform_get_resource(hdmi.pdev, IORESOURCE_MEM, 0);
+	if (!res) {
+		DSSERR("can't get IORESOURCE_MEM HDMI\n");
+		return -EINVAL;
+	}
+
+	/*
+	 * Pass this resource to audio_pdev.
+	 * Audio drivers should not remap it
+	 */
+	hdmi_aud_res[HDMI_AUDIO_MEM_RESOURCE].start = res->start;
+	hdmi_aud_res[HDMI_AUDIO_MEM_RESOURCE].end = res->end;
+	hdmi_aud_res[HDMI_AUDIO_MEM_RESOURCE].flags = IORESOURCE_MEM;
+
+	res = platform_get_resource(hdmi.pdev, IORESOURCE_DMA, 0);
+	if (!res) {
+		DSSERR("can't get IORESOURCE_DMA HDMI\n");
+		return -EINVAL;
+	}
+
+	/* Pass this resource to audio_pdev */
+	hdmi_aud_res[HDMI_AUDIO_DMA_RESOURCE].start = res->start;
+	hdmi_aud_res[HDMI_AUDIO_DMA_RESOURCE].end = res->end;
+	hdmi_aud_res[HDMI_AUDIO_DMA_RESOURCE].flags = IORESOURCE_DMA;
+
+	/* create platform device for HDMI audio driver */
+	hdmi.audio_pdev = platform_device_register_simple(
+							  "omap_hdmi_audio",
+							  -1, hdmi_aud_res,
+							   ARRAY_SIZE(hdmi_aud_res));
+	if (IS_ERR(hdmi.audio_pdev)) {
+		DSSERR("Can't instantiate hdmi-audio\n");
+		return PTR_ERR(hdmi.audio_pdev);
+	}
+
+	return 0;
+}
+
 int hdmi_compute_acr(u32 sample_freq, u32 *n, u32 *cts)
 {
 	u32 deep_color;
@@ -1044,6 +1098,11 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		goto err_panel_init;
 	}
 
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+	r = hdmi_probe_audio(pdev);
+	if (r)
+		goto err_audio_dev;
+#endif
 	dss_debugfs_create_file("hdmi", hdmi_dump_regs);
 
 	hdmi_init_output(pdev);
@@ -1052,6 +1111,10 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 
 	return 0;
 
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+err_audio_dev:
+	hdmi_panel_exit();
+#endif
 err_panel_init:
 	hdmi_put_clocks();
 	return r;
@@ -1066,6 +1129,11 @@ static int __exit hdmi_remove_child(struct device *dev, void *data)
 
 static int __exit omapdss_hdmihw_remove(struct platform_device *pdev)
 {
+#if defined(CONFIG_OMAP4_DSS_HDMI_AUDIO)
+	if (!IS_ERR(hdmi.audio_pdev))
+		platform_device_unregister(hdmi.audio_pdev);
+#endif
+
 	device_for_each_child(&pdev->dev, NULL, hdmi_remove_child);
 
 	dss_unregister_child_devices(&pdev->dev);
