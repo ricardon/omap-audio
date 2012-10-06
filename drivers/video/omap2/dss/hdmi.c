@@ -62,6 +62,7 @@
 static struct {
 	struct mutex lock;
 	struct platform_device *pdev;
+
 	struct hdmi_ip_data ip_data;
 
 	struct clk *sys_clk;
@@ -1084,6 +1085,7 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 	hdmi.pdev = pdev;
 
 	mutex_init(&hdmi.lock);
+	mutex_init(&hdmi.ip_data.lock);
 
 	res = platform_get_resource(hdmi.pdev, IORESOURCE_MEM, 0);
 	if (!res) {
@@ -1111,9 +1113,11 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 	hdmi.ip_data.pll_offset = HDMI_PLLCTRL;
 	hdmi.ip_data.phy_offset = HDMI_PHY;
 
-	mutex_init(&hdmi.ip_data.lock);
-
-	hdmi_panel_init();
+	r = hdmi_panel_init();
+	if (r) {
+		DSSERR("can't init panel\n");
+		goto err_panel_init;
+	}
 
 	dss_debugfs_create_file("hdmi", hdmi_dump_regs);
 
@@ -1125,6 +1129,10 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		hdmi_probe_pdata(pdev);
 
 	return 0;
+
+err_panel_init:
+	hdmi_put_clocks();
+	return r;
 }
 
 static int __exit hdmi_remove_child(struct device *dev, void *data)
