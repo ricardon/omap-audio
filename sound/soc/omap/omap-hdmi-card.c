@@ -27,7 +27,7 @@
 #include <asm/mach-types.h>
 #include <video/omapdss.h>
 
-#define DRV_NAME "omap-hdmi-audio"
+#define DRV_NAME "omap-hdmi-tpd12s015-audio"
 
 static struct snd_soc_dai_link omap_hdmi_dai = {
 	.name = "HDMI",
