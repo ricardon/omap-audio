@@ -860,7 +860,7 @@ static int hdmi_probe_audio(struct platform_device *pdev)
 	aud_res[1].start = res->start;
 
 	/* create platform device for HDMI audio driver */
-	aud_pdev = platform_device_register_simple("omap-hdmi-audio-dai",
+	aud_pdev = platform_device_register_simple("omap-hdmi-audio",
 						   pdev->id, aud_res,
 						   ARRAY_SIZE(aud_res));
 	if (IS_ERR(aud_pdev)) {
