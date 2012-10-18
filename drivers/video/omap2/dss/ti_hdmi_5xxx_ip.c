@@ -669,7 +669,7 @@ static void hdmi_core_mask_interrupts(struct hdmi_ip_data *ip_data)
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_CC08, 0xff, 7, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_D010, 0xff, 7, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_CEC_MASK, 0xff, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_GP_MASK, 0x3, 1, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_GP_MASK, 0x3, 1, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_HDCP_MASK, 0xff, 7, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_CEC_MASK, 0xff, 7, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_I2CM_INT, 0x1, 2, 2);
@@ -702,7 +702,7 @@ static void hdmi_core_enable_interrupts(struct hdmi_ip_data *ip_data)
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_PHY_I2CM_CTLINT_ADDR, 0x88, 7, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_INT, 0xA3, 7, 0);
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_CEC_MASK, 0x0, 7, 0);
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_GP_MASK, 0x0, 1, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_GP_MASK, 0x0, 1, 0);
 }
 
 int ti_hdmi_5xxx_irq_process(struct hdmi_ip_data *ip_data)
@@ -946,9 +946,9 @@ static void ti_hdmi_5xxx_core_audio_config(struct hdmi_ip_data *ip_data,
 	/* disable HBR */
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_GP_CONF2, 0, 0, 0);
 	/* Enable GPA FIFO full and empty mask */
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_GP_MASK, 3, 1, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_GP_MASK, 3, 1, 0);
 	/* Set polarity of GPA FIFO empty interrupts */
-	REG_FLD_MOD(core_sys_base, HDMI_CORE_GP_POL, 1, 0, 0);
+	REG_FLD_MOD(core_sys_base, HDMI_CORE_AUD_GP_POL, 1, 0, 0);
 
 	/*Unmute audio */
 	REG_FLD_MOD(core_sys_base, HDMI_CORE_FC_AUDSCONF, 0, 7, 4);
