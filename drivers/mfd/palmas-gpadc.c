@@ -32,6 +32,7 @@
 #include <linux/workqueue.h>
 #include <linux/mfd/palmas.h>
 #include <linux/hwmon-sysfs.h>
+#include <linux/of.h>
 #include <linux/of_platform.h>
 
 struct palmas_ideal_code {
