@@ -32,10 +32,9 @@
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
 #include <linux/gfp.h>
+#include <linux/sizes.h>
 
 #include <video/omapdss.h>
-
-#include <plat/cpu.h>
 
 #include "dss.h"
 #include "dss_features.h"
@@ -746,7 +745,7 @@ static void dss_runtime_put(void)
 }
 
 /* DEBUGFS */
-#if defined(CONFIG_DEBUG_FS) && defined(CONFIG_OMAP2_DSS_DEBUG_SUPPORT)
+#if defined(CONFIG_OMAP2_DSS_DEBUGFS)
 void dss_debug_dump_clocks(struct seq_file *s)
 {
 	dss_dump_clocks(s);
@@ -792,29 +791,45 @@ static const struct dss_features omap54xx_dss_feats __initconst = {
 	.dpi_select_source	=	&dss_dpi_select_source_omap5,
 };
 
-static int __init dss_init_features(struct device *dev)
+static int __init dss_init_features(struct platform_device *pdev)
 {
 	const struct dss_features *src;
 	struct dss_features *dst;
 
-	dst = devm_kzalloc(dev, sizeof(*dst), GFP_KERNEL);
+	dst = devm_kzalloc(&pdev->dev, sizeof(*dst), GFP_KERNEL);
 	if (!dst) {
-		dev_err(dev, "Failed to allocate local DSS Features\n");
+		dev_err(&pdev->dev, "Failed to allocate local DSS Features\n");
 		return -ENOMEM;
 	}
 
-	if (cpu_is_omap24xx())
+	switch (omapdss_get_version()) {
+	case OMAPDSS_VER_OMAP24xx:
 		src = &omap24xx_dss_feats;
-	else if (cpu_is_omap34xx())
+		break;
+
+	case OMAPDSS_VER_OMAP34xx_ES1:
+	case OMAPDSS_VER_OMAP34xx_ES3:
+	case OMAPDSS_VER_AM35xx:
 		src = &omap34xx_dss_feats;
-	else if (cpu_is_omap3630())
+		break;
+
+	case OMAPDSS_VER_OMAP3630:
 		src = &omap3630_dss_feats;
-	else if (cpu_is_omap44xx())
+		break;
+
+	case OMAPDSS_VER_OMAP4430_ES1:
+	case OMAPDSS_VER_OMAP4430_ES2:
+	case OMAPDSS_VER_OMAP4:
 		src = &omap44xx_dss_feats;
-	else if (soc_is_omap54xx())
+		break;
+
+	case OMAPDSS_VER_OMAP5:
 		src = &omap54xx_dss_feats;
-	else
+		break;
+
+	default:
 		return -ENODEV;
+	}
 
 	memcpy(dst, src, sizeof(*dst));
 	dss.feat = dst;
@@ -831,7 +846,7 @@ static int __init omap_dsshw_probe(struct platform_device *pdev)
 
 	dss.pdev = pdev;
 
-	r = dss_init_features(&dss.pdev->dev);
+	r = dss_init_features(dss.pdev);
 	if (r)
 		return r;
 
@@ -927,12 +942,24 @@ static const struct dev_pm_ops dss_pm_ops = {
 	.runtime_resume = dss_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id dss_of_match[] = {
+	{
+		.compatible = "ti,omap4-dss",
+	},
+	{},
+};
+#else
+#define dss_of_match NULL
+#endif
+
 static struct platform_driver omap_dsshw_driver = {
 	.remove         = __exit_p(omap_dsshw_remove),
 	.driver         = {
 		.name   = "omapdss_dss",
 		.owner  = THIS_MODULE,
 		.pm	= &dss_pm_ops,
+		.of_match_table = dss_of_match,
 	},
 };
 

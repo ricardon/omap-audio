@@ -34,6 +34,7 @@
 #include <linux/regulator/consumer.h>
 #include <linux/suspend.h>
 #include <linux/slab.h>
+#include <linux/of_device.h>
 
 #include <video/omapdss.h>
 
@@ -53,15 +54,17 @@ static char *def_disp_name;
 module_param_named(def_disp, def_disp_name, charp, 0);
 MODULE_PARM_DESC(def_disp, "default display name");
 
-#ifdef DEBUG
-bool dss_debug;
-module_param_named(debug, dss_debug, bool, 0644);
-#endif
-
 const char *dss_get_default_display_name(void)
 {
 	return core.default_display_name;
 }
+
+enum omapdss_version omapdss_get_version(void)
+{
+	struct omap_dss_board_info *pdata = core.pdev->dev.platform_data;
+	return pdata->version;
+}
+EXPORT_SYMBOL(omapdss_get_version);
 
 /* REGULATORS */
 
@@ -122,7 +125,7 @@ void dss_dsi_disable_pads(int dsi_id, unsigned lane_mask)
 {
 	struct omap_dss_board_info *board_data = core.pdev->dev.platform_data;
 
-	if (!board_data->dsi_enable_pads)
+	if (!board_data->dsi_disable_pads)
 		return;
 
 	return board_data->dsi_disable_pads(dsi_id, lane_mask);
@@ -138,7 +141,7 @@ int dss_set_min_bus_tput(struct device *dev, unsigned long tput)
 		return 0;
 }
 
-#if defined(CONFIG_DEBUG_FS) && defined(CONFIG_OMAP2_DSS_DEBUG_SUPPORT)
+#if defined(CONFIG_OMAP2_DSS_DEBUGFS)
 static int dss_debug_show(struct seq_file *s, void *unused)
 {
 	void (*func)(struct seq_file *) = s->private;
@@ -193,7 +196,7 @@ int dss_debugfs_create_file(const char *name, void (*write)(struct seq_file *))
 
 	return 0;
 }
-#else /* CONFIG_DEBUG_FS && CONFIG_OMAP2_DSS_DEBUG_SUPPORT */
+#else /* CONFIG_OMAP2_DSS_DEBUGFS */
 static inline int dss_initialize_debugfs(void)
 {
 	return 0;
@@ -205,7 +208,7 @@ int dss_debugfs_create_file(const char *name, void (*write)(struct seq_file *))
 {
 	return 0;
 }
-#endif /* CONFIG_DEBUG_FS && CONFIG_OMAP2_DSS_DEBUG_SUPPORT */
+#endif /* CONFIG_OMAP2_DSS_DEBUGFS */
 
 /* PLATFORM DEVICE */
 static int omap_dss_pm_notif(struct notifier_block *b, unsigned long v, void *d)
@@ -237,7 +240,7 @@ static int __init omap_dss_probe(struct platform_device *pdev)
 
 	core.pdev = pdev;
 
-	dss_features_init();
+	dss_features_init(omapdss_get_version());
 
 	dss_apply_init();
 
@@ -297,7 +300,16 @@ static int dss_bus_match(struct device *dev, struct device_driver *driver)
 	DSSDBG("bus_match. dev %s/%s, drv %s\n",
 			dev_name(dev), dssdev->driver_name, driver->name);
 
-	return strcmp(dssdev->driver_name, driver->name) == 0;
+	/* Attempt an OF style match first... */
+	if (of_driver_match_device(dev, driver))
+		return 1;
+
+	/* Then with old style */
+	if (dssdev->driver_name && driver->name &&
+			strcmp(dssdev->driver_name, driver->name) == 0)
+		return 1;
+
+	return 0;
 }
 
 static ssize_t device_name_show(struct device *dev,

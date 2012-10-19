@@ -38,6 +38,7 @@
 #include <linux/slab.h>
 #include <linux/debugfs.h>
 #include <linux/pm_runtime.h>
+#include <linux/of.h>
 
 #include <video/omapdss.h>
 #include <video/mipi_display.h>
@@ -45,7 +46,6 @@
 #include "dss.h"
 #include "dss_features.h"
 
-/*#define VERBOSE_IRQ*/
 #define DSI_CATCH_MISSING_TE
 
 struct dsi_reg { u16 idx; };
@@ -365,11 +365,20 @@ struct platform_device *dsi_get_dsidev_from_id(int module)
 	struct omap_dss_output *out;
 	enum omap_dss_output_id	id;
 
-	id = module == 0 ? OMAP_DSS_OUTPUT_DSI1 : OMAP_DSS_OUTPUT_DSI2;
+	switch (module) {
+	case 0:
+		id = OMAP_DSS_OUTPUT_DSI1;
+		break;
+	case 1:
+		id = OMAP_DSS_OUTPUT_DSI2;
+		break;
+	default:
+		return NULL;
+	}
 
 	out = omap_dss_get_output(id);
 
-	return out->pdev;
+	return out ? out->pdev : NULL;
 }
 
 static inline void dsi_write_reg(struct platform_device *dsidev,
@@ -526,42 +535,38 @@ static inline void dsi_perf_show(struct platform_device *dsidev,
 }
 #endif
 
+static int verbose_irq;
+
 static void print_irq_status(u32 status)
 {
 	if (status == 0)
 		return;
 
-#ifndef VERBOSE_IRQ
-	if ((status & ~DSI_IRQ_CHANNEL_MASK) == 0)
+	if (!verbose_irq && (status & ~DSI_IRQ_CHANNEL_MASK) == 0)
 		return;
-#endif
-	printk(KERN_DEBUG "DSI IRQ: 0x%x: ", status);
 
-#define PIS(x) \
-	if (status & DSI_IRQ_##x) \
-		printk(#x " ");
-#ifdef VERBOSE_IRQ
-	PIS(VC0);
-	PIS(VC1);
-	PIS(VC2);
-	PIS(VC3);
-#endif
-	PIS(WAKEUP);
-	PIS(RESYNC);
-	PIS(PLL_LOCK);
-	PIS(PLL_UNLOCK);
-	PIS(PLL_RECALL);
-	PIS(COMPLEXIO_ERR);
-	PIS(HS_TX_TIMEOUT);
-	PIS(LP_RX_TIMEOUT);
-	PIS(TE_TRIGGER);
-	PIS(ACK_TRIGGER);
-	PIS(SYNC_LOST);
-	PIS(LDO_POWER_GOOD);
-	PIS(TA_TIMEOUT);
+#define PIS(x) (status & DSI_IRQ_##x) ? (#x " ") : ""
+
+	pr_debug("DSI IRQ: 0x%x: %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+		status,
+		verbose_irq ? PIS(VC0) : "",
+		verbose_irq ? PIS(VC1) : "",
+		verbose_irq ? PIS(VC2) : "",
+		verbose_irq ? PIS(VC3) : "",
+		PIS(WAKEUP),
+		PIS(RESYNC),
+		PIS(PLL_LOCK),
+		PIS(PLL_UNLOCK),
+		PIS(PLL_RECALL),
+		PIS(COMPLEXIO_ERR),
+		PIS(HS_TX_TIMEOUT),
+		PIS(LP_RX_TIMEOUT),
+		PIS(TE_TRIGGER),
+		PIS(ACK_TRIGGER),
+		PIS(SYNC_LOST),
+		PIS(LDO_POWER_GOOD),
+		PIS(TA_TIMEOUT));
 #undef PIS
-
-	printk("\n");
 }
 
 static void print_irq_status_vc(int channel, u32 status)
@@ -569,28 +574,24 @@ static void print_irq_status_vc(int channel, u32 status)
 	if (status == 0)
 		return;
 
-#ifndef VERBOSE_IRQ
-	if ((status & ~DSI_VC_IRQ_PACKET_SENT) == 0)
+	if (!verbose_irq && (status & ~DSI_VC_IRQ_PACKET_SENT) == 0)
 		return;
-#endif
-	printk(KERN_DEBUG "DSI VC(%d) IRQ 0x%x: ", channel, status);
 
-#define PIS(x) \
-	if (status & DSI_VC_IRQ_##x) \
-		printk(#x " ");
-	PIS(CS);
-	PIS(ECC_CORR);
-#ifdef VERBOSE_IRQ
-	PIS(PACKET_SENT);
-#endif
-	PIS(FIFO_TX_OVF);
-	PIS(FIFO_RX_OVF);
-	PIS(BTA);
-	PIS(ECC_NO_CORR);
-	PIS(FIFO_TX_UDF);
-	PIS(PP_BUSY_CHANGE);
+#define PIS(x) (status & DSI_VC_IRQ_##x) ? (#x " ") : ""
+
+	pr_debug("DSI VC(%d) IRQ 0x%x: %s%s%s%s%s%s%s%s%s\n",
+		channel,
+		status,
+		PIS(CS),
+		PIS(ECC_CORR),
+		PIS(ECC_NO_CORR),
+		verbose_irq ? PIS(PACKET_SENT) : "",
+		PIS(BTA),
+		PIS(FIFO_TX_OVF),
+		PIS(FIFO_RX_OVF),
+		PIS(FIFO_TX_UDF),
+		PIS(PP_BUSY_CHANGE));
 #undef PIS
-	printk("\n");
 }
 
 static void print_irq_status_cio(u32 status)
@@ -598,34 +599,31 @@ static void print_irq_status_cio(u32 status)
 	if (status == 0)
 		return;
 
-	printk(KERN_DEBUG "DSI CIO IRQ 0x%x: ", status);
+#define PIS(x) (status & DSI_CIO_IRQ_##x) ? (#x " ") : ""
 
-#define PIS(x) \
-	if (status & DSI_CIO_IRQ_##x) \
-		printk(#x " ");
-	PIS(ERRSYNCESC1);
-	PIS(ERRSYNCESC2);
-	PIS(ERRSYNCESC3);
-	PIS(ERRESC1);
-	PIS(ERRESC2);
-	PIS(ERRESC3);
-	PIS(ERRCONTROL1);
-	PIS(ERRCONTROL2);
-	PIS(ERRCONTROL3);
-	PIS(STATEULPS1);
-	PIS(STATEULPS2);
-	PIS(STATEULPS3);
-	PIS(ERRCONTENTIONLP0_1);
-	PIS(ERRCONTENTIONLP1_1);
-	PIS(ERRCONTENTIONLP0_2);
-	PIS(ERRCONTENTIONLP1_2);
-	PIS(ERRCONTENTIONLP0_3);
-	PIS(ERRCONTENTIONLP1_3);
-	PIS(ULPSACTIVENOT_ALL0);
-	PIS(ULPSACTIVENOT_ALL1);
+	pr_debug("DSI CIO IRQ 0x%x: %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+		status,
+		PIS(ERRSYNCESC1),
+		PIS(ERRSYNCESC2),
+		PIS(ERRSYNCESC3),
+		PIS(ERRESC1),
+		PIS(ERRESC2),
+		PIS(ERRESC3),
+		PIS(ERRCONTROL1),
+		PIS(ERRCONTROL2),
+		PIS(ERRCONTROL3),
+		PIS(STATEULPS1),
+		PIS(STATEULPS2),
+		PIS(STATEULPS3),
+		PIS(ERRCONTENTIONLP0_1),
+		PIS(ERRCONTENTIONLP1_1),
+		PIS(ERRCONTENTIONLP0_2),
+		PIS(ERRCONTENTIONLP1_2),
+		PIS(ERRCONTENTIONLP0_3),
+		PIS(ERRCONTENTIONLP1_3),
+		PIS(ULPSACTIVENOT_ALL0),
+		PIS(ULPSACTIVENOT_ALL1));
 #undef PIS
-
-	printk("\n");
 }
 
 #ifdef CONFIG_OMAP2_DSS_COLLECT_IRQ_STATS
@@ -1107,27 +1105,15 @@ static inline void dsi_enable_pll_clock(struct platform_device *dsidev,
 	}
 }
 
-#ifdef DEBUG
 static void _dsi_print_reset_status(struct platform_device *dsidev)
 {
 	u32 l;
 	int b0, b1, b2;
 
-	if (!dss_debug)
-		return;
-
 	/* A dummy read using the SCP interface to any DSIPHY register is
 	 * required after DSIPHY reset to complete the reset of the DSI complex
 	 * I/O. */
 	l = dsi_read_reg(dsidev, DSI_DSIPHY_CFG5);
-
-	printk(KERN_DEBUG "DSI resets: ");
-
-	l = dsi_read_reg(dsidev, DSI_PLL_STATUS);
-	printk("PLL (%d) ", FLD_GET(l, 0, 0));
-
-	l = dsi_read_reg(dsidev, DSI_COMPLEXIO_CFG1);
-	printk("CIO (%d) ", FLD_GET(l, 29, 29));
 
 	if (dss_has_feature(FEAT_DSI_REVERSE_TXCLKESC)) {
 		b0 = 28;
@@ -1139,18 +1125,21 @@ static void _dsi_print_reset_status(struct platform_device *dsidev)
 		b2 = 26;
 	}
 
-	l = dsi_read_reg(dsidev, DSI_DSIPHY_CFG5);
-	printk("PHY (%x%x%x, %d, %d, %d)\n",
-			FLD_GET(l, b0, b0),
-			FLD_GET(l, b1, b1),
-			FLD_GET(l, b2, b2),
-			FLD_GET(l, 29, 29),
-			FLD_GET(l, 30, 30),
-			FLD_GET(l, 31, 31));
+#define DSI_FLD_GET(fld, start, end)\
+	FLD_GET(dsi_read_reg(dsidev, DSI_##fld), start, end)
+
+	pr_debug("DSI resets: PLL (%d) CIO (%d) PHY (%x%x%x, %d, %d, %d)\n",
+		DSI_FLD_GET(PLL_STATUS, 0, 0),
+		DSI_FLD_GET(COMPLEXIO_CFG1, 29, 29),
+		DSI_FLD_GET(DSIPHY_CFG5, b0, b0),
+		DSI_FLD_GET(DSIPHY_CFG5, b1, b1),
+		DSI_FLD_GET(DSIPHY_CFG5, b2, b2),
+		DSI_FLD_GET(DSIPHY_CFG5, 29, 29),
+		DSI_FLD_GET(DSIPHY_CFG5, 30, 30),
+		DSI_FLD_GET(DSIPHY_CFG5, 31, 31));
+
+#undef DSI_FLD_GET
 }
-#else
-#define _dsi_print_reset_status(x)
-#endif
 
 static inline int dsi_if_enable(struct platform_device *dsidev, bool enable)
 {
@@ -1612,7 +1601,7 @@ int dsi_pll_set_clock_div(struct platform_device *dsidev,
 	u8 regn_start, regn_end, regm_start, regm_end;
 	u8 regm_dispc_start, regm_dispc_end, regm_dsi_start, regm_dsi_end;
 
-	DSSDBGF();
+	DSSDBG("DSI PLL clock config starts");
 
 	dsi->current_cinfo.clkin = cinfo->clkin;
 	dsi->current_cinfo.fint = cinfo->fint;
@@ -2431,7 +2420,7 @@ static int dsi_cio_init(struct platform_device *dsidev)
 	int r;
 	u32 l;
 
-	DSSDBGF();
+	DSSDBG("DSI CIO init starts");
 
 	r = dss_dsi_enable_pads(dsi->module_id, dsi_get_lane_mask(dsidev));
 	if (r)
@@ -2782,7 +2771,7 @@ static void dsi_vc_initial_config(struct platform_device *dsidev, int channel)
 {
 	u32 r;
 
-	DSSDBGF("%d", channel);
+	DSSDBG("Initial config of virtual channel %d", channel);
 
 	r = dsi_read_reg(dsidev, DSI_VC_CTRL(channel));
 
@@ -2814,7 +2803,7 @@ static int dsi_vc_config_source(struct platform_device *dsidev, int channel,
 	if (dsi->vc[channel].source == source)
 		return 0;
 
-	DSSDBGF("%d", channel);
+	DSSDBG("Source config of virtual channel %d", channel);
 
 	dsi_sync_vc(dsidev, channel);
 
@@ -3572,7 +3561,7 @@ static int dsi_enter_ulps(struct platform_device *dsidev)
 	int r, i;
 	unsigned mask;
 
-	DSSDBGF();
+	DSSDBG("Entering ULPS");
 
 	WARN_ON(!dsi_bus_is_locked(dsidev));
 
@@ -4276,7 +4265,7 @@ int omapdss_dsi_set_clocks(struct omap_dss_device *dssdev,
 	unsigned long pck;
 	int r;
 
-	DSSDBGF("ddr_clk %lu, lp_clk %lu", ddr_clk, lp_clk);
+	DSSDBG("Setting DSI clocks: ddr_clk %lu, lp_clk %lu", ddr_clk, lp_clk);
 
 	mutex_lock(&dsi->lock);
 
@@ -5172,6 +5161,54 @@ static void __init dsi_probe_pdata(struct platform_device *dsidev)
 	}
 }
 
+static void __init dsi_probe_of(struct platform_device *pdev)
+{
+	struct dsi_data *dsi = dsi_get_dsidrv_data(pdev);
+	struct device_node *node = pdev->dev.of_node;
+	struct device_node *child;
+	struct omap_dss_device *dssdev;
+	u32 v;
+	enum omap_channel channel;
+	int r;
+
+	child = of_get_next_available_child(node, NULL);
+
+	if (!child)
+		return;
+
+	r = of_property_read_u32(node, "video-source", &v);
+	if (r) {
+		DSSERR("parsing channel failed\n");
+		return;
+	}
+
+	channel = v;
+
+	dssdev = dss_alloc_and_init_device(&pdev->dev);
+	if (!dssdev)
+		return;
+
+	dssdev->dev.of_node = child;
+	dssdev->type = OMAP_DISPLAY_TYPE_DSI;
+	dssdev->name = child->name;
+	dssdev->channel = channel;
+	dssdev->phy.dsi.module = dsi->module_id;
+
+	r = dsi_init_display(dssdev);
+	if (r) {
+		DSSERR("device %s init failed: %d\n", dssdev->name, r);
+		dss_put_device(dssdev);
+		return;
+	}
+
+	r = dss_add_device(dssdev);
+	if (r) {
+		DSSERR("dss_add_device failed %d\n", r);
+		dss_put_device(dssdev);
+		return;
+	}
+}
+
 static void __init dsi_init_output(struct platform_device *dsidev)
 {
 	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
@@ -5206,7 +5243,19 @@ static int __init omap_dsihw_probe(struct platform_device *dsidev)
 	if (!dsi)
 		return -ENOMEM;
 
-	dsi->module_id = dsidev->id;
+	if (dsidev->dev.of_node) {
+		u32 id;
+		r = of_property_read_u32(dsidev->dev.of_node, "reg", &id);
+		if (r) {
+			DSSERR("failed to read DSI module ID\n");
+			return r;
+		}
+
+		dsi->module_id = id;
+	} else {
+		dsi->module_id = dsidev->id;
+	}
+
 	dsi->pdev = dsidev;
 	dev_set_drvdata(&dsidev->dev, dsi);
 
@@ -5289,8 +5338,6 @@ static int __init omap_dsihw_probe(struct platform_device *dsidev)
 
 	dsi_init_output(dsidev);
 
-	dsi_probe_pdata(dsidev);
-
 	dsi_runtime_put(dsidev);
 
 	if (dsi->module_id == 0)
@@ -5304,6 +5351,12 @@ static int __init omap_dsihw_probe(struct platform_device *dsidev)
 	else if (dsi->module_id == 1)
 		dss_debugfs_create_file("dsi2_irqs", dsi2_dump_irqs);
 #endif
+
+	if (dsidev->dev.of_node)
+		dsi_probe_of(dsidev);
+	else if (dsidev->dev.platform_data)
+		 dsi_probe_pdata(dsidev);
+
 	return 0;
 
 err_runtime_get:
@@ -5362,12 +5415,24 @@ static const struct dev_pm_ops dsi_pm_ops = {
 	.runtime_resume = dsi_runtime_resume,
 };
 
+#if defined(CONFIG_OF)
+static const struct of_device_id dsi_of_match[] = {
+	{
+		.compatible = "ti,omap4-dsi",
+	},
+	{},
+};
+#else
+#define dsi_of_match NULL
+#endif
+
 static struct platform_driver omap_dsihw_driver = {
 	.remove         = __exit_p(omap_dsihw_remove),
 	.driver         = {
 		.name   = "omapdss_dsi",
 		.owner  = THIS_MODULE,
 		.pm	= &dsi_pm_ops,
+		.of_match_table = dsi_of_match,
 	},
 };
 

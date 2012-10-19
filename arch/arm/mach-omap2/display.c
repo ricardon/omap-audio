@@ -23,6 +23,8 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/delay.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
 
 #include <video/omapdss.h>
 #include <plat/omap_hwmod.h>
@@ -100,17 +102,20 @@ static const struct omap_dss_hwmod_data omap4_dss_hwmod_data[] __initconst = {
 	{ "dss_hdmi", "omapdss_hdmi", -1 },
 };
 
-static void __init omap4_hdmi_mux_pads(enum omap_hdmi_flags flags)
+static void __init omap4_tpd12s015_mux_pads(void)
 {
-	u32 reg;
-	u16 control_i2c_1;
-
 	omap_mux_init_signal("hdmi_cec",
 			OMAP_PIN_INPUT_PULLUP);
 	omap_mux_init_signal("hdmi_ddc_scl",
 			OMAP_PIN_INPUT_PULLUP);
 	omap_mux_init_signal("hdmi_ddc_sda",
 			OMAP_PIN_INPUT_PULLUP);
+}
+
+static void __init omap4_hdmi_mux_pads(enum omap_hdmi_flags flags)
+{
+	u32 reg;
+	u16 control_i2c_1;
 
 	/*
 	 * CONTROL_I2C_1: HDMI_DDC_SDA_PULLUPRESX (bit 28) and
@@ -159,10 +164,42 @@ static int omap4_dsi_mux_pads(int dsi_id, unsigned lanes)
 	return 0;
 }
 
+#define CONTROL_PAD_BASE	0x4A002800
+#define CONTROL_DSIPHY		0x614
+
+static int omap5_dsi_mux_pads(int dsi_id, unsigned lanes)
+{
+	u32 enable_mask, enable_shift, reg;
+	void __iomem *ctrl_pad_base = NULL;
+
+	ctrl_pad_base = ioremap(CONTROL_PAD_BASE, SZ_4K);
+	if (!ctrl_pad_base)
+		return -ENXIO;
+
+	if (dsi_id == 0) {
+		enable_mask = OMAP4_DSI1_LANEENABLE_MASK;
+		enable_shift = OMAP4_DSI1_LANEENABLE_SHIFT;
+	} else if (dsi_id == 1) {
+		enable_mask = OMAP4_DSI2_LANEENABLE_MASK;
+		enable_shift = OMAP4_DSI2_LANEENABLE_SHIFT;
+	} else {
+		return -ENODEV;
+	}
+
+	reg = __raw_readl(ctrl_pad_base + CONTROL_DSIPHY);
+	reg &= ~enable_mask;
+	reg |= (lanes << enable_shift) & enable_mask;
+	__raw_writel(reg, ctrl_pad_base + CONTROL_DSIPHY);
+
+	return 0;
+}
+
 int __init omap_hdmi_init(enum omap_hdmi_flags flags)
 {
-	if (cpu_is_omap44xx())
+	if (cpu_is_omap44xx()) {
 		omap4_hdmi_mux_pads(flags);
+		omap4_tpd12s015_mux_pads();
+	}
 
 	return 0;
 }
@@ -171,6 +208,8 @@ static int omap_dsi_enable_pads(int dsi_id, unsigned lane_mask)
 {
 	if (cpu_is_omap44xx())
 		return omap4_dsi_mux_pads(dsi_id, lane_mask);
+	else if (soc_is_omap54xx())
+		return omap5_dsi_mux_pads(dsi_id, lane_mask);
 
 	return 0;
 }
@@ -179,6 +218,8 @@ static void omap_dsi_disable_pads(int dsi_id, unsigned lane_mask)
 {
 	if (cpu_is_omap44xx())
 		omap4_dsi_mux_pads(dsi_id, 0);
+	else if (soc_is_omap54xx())
+		omap5_dsi_mux_pads(dsi_id, 0);
 }
 
 static int omap_dss_set_min_bus_tput(struct device *dev, unsigned long tput)
@@ -284,6 +325,35 @@ err:
 	return ERR_PTR(r);
 }
 
+static enum omapdss_version __init omap_display_get_version(void)
+{
+	if (cpu_is_omap24xx())
+		return OMAPDSS_VER_OMAP24xx;
+	else if (cpu_is_omap3630())
+		return OMAPDSS_VER_OMAP3630;
+	else if (cpu_is_omap34xx()) {
+		if (soc_is_am35xx()) {
+			return OMAPDSS_VER_AM35xx;
+		} else {
+			if (omap_rev() < OMAP3430_REV_ES3_0)
+				return OMAPDSS_VER_OMAP34xx_ES1;
+			else
+				return OMAPDSS_VER_OMAP34xx_ES3;
+		}
+	} else if (omap_rev() == OMAP4430_REV_ES1_0)
+		return OMAPDSS_VER_OMAP4430_ES1;
+	else if (omap_rev() == OMAP4430_REV_ES2_0 ||
+			omap_rev() == OMAP4430_REV_ES2_1 ||
+			omap_rev() == OMAP4430_REV_ES2_2)
+		return OMAPDSS_VER_OMAP4430_ES2;
+	else if (cpu_is_omap44xx())
+		return OMAPDSS_VER_OMAP4;
+	else if (soc_is_omap54xx())
+		return OMAPDSS_VER_OMAP5;
+	else
+		return OMAPDSS_VER_UNKNOWN;
+}
+
 int __init omap_display_init(struct omap_dss_board_info *board_data)
 {
 	int r = 0;
@@ -291,9 +361,18 @@ int __init omap_display_init(struct omap_dss_board_info *board_data)
 	int i, oh_count;
 	const struct omap_dss_hwmod_data *curr_dss_hwmod;
 	struct platform_device *dss_pdev;
+	enum omapdss_version ver;
 
 	/* create omapdss device */
 
+	ver = omap_display_get_version();
+
+	if (ver == OMAPDSS_VER_UNKNOWN) {
+		pr_err("DSS not supported on this SoC\n");
+		return -ENODEV;
+	}
+
+	board_data->version = ver;
 	board_data->dsi_enable_pads = omap_dsi_enable_pads;
 	board_data->dsi_disable_pads = omap_dsi_disable_pads;
 	board_data->get_context_loss_count = omap_pm_get_dev_context_loss_count;
@@ -519,4 +598,82 @@ int omap_dss_reset(struct omap_hwmod *oh)
 	r = (c == MAX_MODULE_SOFTRESET_WAIT) ? -ETIMEDOUT : 0;
 
 	return r;
+}
+
+static int __init hdmi_init_of(void)
+{
+	if (cpu_is_omap44xx()) {
+		enum omap_hdmi_flags flags;
+
+		/*
+		 * OMAP4460SDP/Blaze and OMAP4430 ES2.3 SDP/Blaze boards and
+		 * later have external pull up on the HDMI I2C lines.
+		 */
+		/* FIXME: Ideally we should know from the DT whether if there is a
+		 * resistor. This could work with PandaES, as it is the only Panda
+		 * with 4460. For SDP, however, there are no dedicated DT files for
+		 * each processor board to know whether the pull-up resistor is
+		 * present.
+		 */
+		if (cpu_is_omap446x() || omap_rev() > OMAP4430_REV_ES2_2)
+			flags = OMAP_HDMI_SDA_SCL_EXTERNAL_PULLUP;
+		else
+			flags = 0;
+
+		omap4_hdmi_mux_pads(flags);
+	}
+
+	return 0;
+}
+
+int __init omapdss_init_of(void)
+{
+	int r;
+	struct platform_device *pdev;
+	struct device_node *node;
+	enum omapdss_version ver;
+
+	static struct omap_dss_board_info board_data = {
+		.dsi_enable_pads = omap_dsi_enable_pads,
+		.dsi_disable_pads = omap_dsi_disable_pads,
+		.get_context_loss_count = omap_pm_get_dev_context_loss_count,
+	};
+
+	ver = omap_display_get_version();
+
+	if (ver == OMAPDSS_VER_UNKNOWN) {
+		pr_err("DSS not supported on this SoC\n");
+		return -ENODEV;
+	}
+
+	board_data.version = ver;
+
+	/* find the main dss node  */
+	node = of_find_node_by_name(NULL, "dss");
+	if (!node)
+		return 0;
+
+	pdev = of_find_device_by_node(node);
+	if (!pdev) {
+		pr_err("Cannot find dss platform device\n");
+		return -EINVAL;
+	}
+
+	r = of_platform_populate(node, NULL, NULL, &pdev->dev);
+	if (r) {
+		pr_err("Failed to populate dss devices\n");
+		return -EINVAL;
+	}
+
+	omap_display_device.dev.platform_data = &board_data;
+
+	r = platform_device_register(&omap_display_device);
+	if (r < 0) {
+		pr_err("Unable to register omapdss device\n");
+		return r;
+	}
+
+	hdmi_init_of();
+
+	return 0;
 }
