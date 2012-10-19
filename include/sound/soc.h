@@ -291,6 +291,10 @@
 #define SND_SOC_COMP_ORDER_LATE		1
 #define SND_SOC_COMP_ORDER_LAST		2
 
+#define snd_soc_get_enum_text(soc_enum, idx) \
+       (soc_enum->texts ? soc_enum->texts[idx] : soc_enum->dtexts[idx])
+
+
 /*
  * Bias levels
  *
@@ -308,6 +312,7 @@ enum snd_soc_bias_level {
 	SND_SOC_BIAS_PREPARE = 2,
 	SND_SOC_BIAS_ON = 3,
 };
+
 
 struct device_node;
 struct snd_jack;
@@ -365,6 +370,8 @@ int snd_soc_codec_set_pll(struct snd_soc_codec *codec, int pll_id, int source,
 
 int snd_soc_register_card(struct snd_soc_card *card);
 int snd_soc_unregister_card(struct snd_soc_card *card);
+int snd_soc_card_new_dai_links(struct snd_soc_card *card,
+	struct snd_soc_dai_link *new, int count);
 int snd_soc_suspend(struct device *dev);
 int snd_soc_resume(struct device *dev);
 int snd_soc_poweroff(struct device *dev);
@@ -896,6 +903,9 @@ struct snd_soc_dai_link {
 	/* pmdown_time is ignored at stop */
 	unsigned int ignore_pmdown_time:1;
 
+	/* This DAI can support no host IO (no pcm data is copied to from host) */
+	unsigned int no_host_mode:2;
+
 	/* codec/machine specific init - e.g. add machine controls */
 	int (*init)(struct snd_soc_pcm_runtime *rtd);
 
@@ -1083,6 +1093,10 @@ struct soc_enum {
 	unsigned int mask;
 	const char * const *texts;
 	const unsigned int *values;
+	/* dynamic enum controls */
+	char **dtexts;
+	unsigned int *dvalues;
+
 	void *dapm;
 };
 
