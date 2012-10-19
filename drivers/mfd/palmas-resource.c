@@ -29,6 +29,7 @@
 #include <linux/platform_device.h>
 #include <linux/miscdevice.h>
 #include <linux/mfd/palmas.h>
+#include <linux/of.h>
 #include <linux/of_platform.h>
 
 static int palmas_resource_read(struct palmas *palmas, unsigned int reg,
