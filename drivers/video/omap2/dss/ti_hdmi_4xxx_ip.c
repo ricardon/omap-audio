@@ -1418,4 +1418,8 @@ void ti_hdmi_4xxx_audio_stop(struct hdmi_ip_data *ip_data)
 	REG_FLD_MOD(hdmi_wp_base(ip_data),
 		    HDMI_WP_AUDIO_CTRL, false, 30, 30);
 }
+u32 ti_hdmi_4xxx_audio_get_dma_port_offset(void)
+{
+	return HDMI_WP_AUDIO_DATA;
+}
 #endif
