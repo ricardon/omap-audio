@@ -63,6 +63,9 @@
 #define GPIO_WIFI_PMENA		54
 #define GPIO_WIFI_IRQ		53
 
+#define FIXED_REG_VBAT_ID	0
+#define FIXED_REG_VWLAN_ID	1
+
 static const int sdp4430_keymap[] = {
 	KEY(0, 0, KEY_E),
 	KEY(0, 1, KEY_R),
@@ -372,7 +375,7 @@ static struct fixed_voltage_config sdp4430_vbat_pdata = {
 
 static struct platform_device sdp4430_vbat = {
 	.name		= "reg-fixed-voltage",
-	.id		= -1,
+	.id		= FIXED_REG_VBAT_ID,
 	.dev = {
 		.platform_data = &sdp4430_vbat_pdata,
 	},
@@ -388,6 +391,11 @@ static struct platform_device sdp4430_hdmi_audio_codec = {
 	.id	= -1,
 };
 
+static struct platform_device sdp4430_spdif_dit_codec = {
+	.name           = "spdif-dit",
+	.id             = -1,
+};
+
 static struct omap_abe_twl6040_data sdp4430_abe_audio_data = {
 	.card_name = "SDP4430",
 	.has_hs		= ABE_TWL6040_LEFT | ABE_TWL6040_RIGHT,
@@ -396,6 +404,7 @@ static struct omap_abe_twl6040_data sdp4430_abe_audio_data = {
 	.has_aux	= ABE_TWL6040_LEFT | ABE_TWL6040_RIGHT,
 	.has_vibra	= ABE_TWL6040_LEFT | ABE_TWL6040_RIGHT,
 
+	.has_abe	= 1,
 	.has_dmic	= 1,
 	.has_hsmic	= 1,
 	.has_mainmic	= 1,
@@ -421,6 +430,7 @@ static struct platform_device *sdp4430_devices[] __initdata = {
 	&sdp4430_leds_pwm,
 	&sdp4430_vbat,
 	&sdp4430_dmic_codec,
+	&sdp4430_spdif_dit_codec,
 	&sdp4430_abe_audio,
 	&sdp4430_hdmi_audio_codec,
 };
@@ -488,7 +498,7 @@ static struct fixed_voltage_config sdp4430_vwlan = {
 
 static struct platform_device omap_vwlan_device = {
 	.name		= "reg-fixed-voltage",
-	.id		= 1,
+	.id		= FIXED_REG_VWLAN_ID,
 	.dev = {
 		.platform_data = &sdp4430_vwlan,
 	},
@@ -539,9 +549,14 @@ static struct twl6040_vibra_data twl6040_vibra = {
 	.vddvibr_uV = 0,	/* fixed volt supply - VBAT */
 };
 
+static struct twl6040_gpo_data twl6040_gpo = {
+	.gpio_base = -1,
+};
+
 static struct twl6040_platform_data twl6040_data = {
 	.codec		= &twl6040_codec,
 	.vibra		= &twl6040_vibra,
+	.gpo		= &twl6040_gpo,
 	.audpwron_gpio	= 127,
 };
 
