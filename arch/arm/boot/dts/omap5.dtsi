@@ -104,6 +104,8 @@
 
 		gpio1: gpio@4ae10000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x4ae10000 0x200>;
+			interrupts = <0 29 0x4>;
 			ti,hwmods = "gpio1";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -113,6 +115,8 @@
 
 		gpio2: gpio@48055000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x48055000 0x200>;
+			interrupts = <0 30 0x4>;
 			ti,hwmods = "gpio2";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -122,6 +126,8 @@
 
 		gpio3: gpio@48057000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x48057000 0x200>;
+			interrupts = <0 31 0x4>;
 			ti,hwmods = "gpio3";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -131,6 +137,8 @@
 
 		gpio4: gpio@48059000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x48059000 0x200>;
+			interrupts = <0 32 0x4>;
 			ti,hwmods = "gpio4";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -140,6 +148,8 @@
 
 		gpio5: gpio@4805b000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x4805b000 0x200>;
+			interrupts = <0 33 0x4>;
 			ti,hwmods = "gpio5";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -149,6 +159,8 @@
 
 		gpio6: gpio@4805d000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x4805d000 0x200>;
+			interrupts = <0 34 0x4>;
 			ti,hwmods = "gpio6";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -158,6 +170,8 @@
 
 		gpio7: gpio@48051000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x48051000 0x200>;
+			interrupts = <0 35 0x4>;
 			ti,hwmods = "gpio7";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -167,6 +181,8 @@
 
 		gpio8: gpio@48053000 {
 			compatible = "ti,omap4-gpio";
+			reg = <0x48053000 0x200>;
+			interrupts = <0 121 0x4>;
 			ti,hwmods = "gpio8";
 			gpio-controller;
 			#gpio-cells = <2>;
@@ -176,6 +192,8 @@
 
 		i2c1: i2c@48070000 {
 			compatible = "ti,omap4-i2c";
+			reg = <0x48070000 0x100>;
+			interrupts = <0 56 0x4>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			ti,hwmods = "i2c1";
@@ -183,6 +201,8 @@
 
 		i2c2: i2c@48072000 {
 			compatible = "ti,omap4-i2c";
+			reg = <0x48072000 0x100>;
+			interrupts = <0 57 0x4>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			ti,hwmods = "i2c2";
@@ -190,20 +210,26 @@
 
 		i2c3: i2c@48060000 {
 			compatible = "ti,omap4-i2c";
+			reg = <0x48060000 0x100>;
+			interrupts = <0 61 0x4>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			ti,hwmods = "i2c3";
 		};
 
-		i2c4: i2c@4807A000 {
+		i2c4: i2c@4807a000 {
 			compatible = "ti,omap4-i2c";
+			reg = <0x4807a000 0x100>;
+			interrupts = <0 62 0x4>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			ti,hwmods = "i2c4";
 		};
 
-		i2c5: i2c@4807C000 {
+		i2c5: i2c@4807c000 {
 			compatible = "ti,omap4-i2c";
+			reg = <0x4807c000 0x100>;
+			interrupts = <0 60 0x4>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			ti,hwmods = "i2c5";
@@ -211,42 +237,56 @@
 
 		uart1: serial@4806a000 {
 			compatible = "ti,omap4-uart";
+			reg = <0x4806a000 0x100>;
+			interrupts = <0 72 0x4>;
 			ti,hwmods = "uart1";
 			clock-frequency = <48000000>;
 		};
 
 		uart2: serial@4806c000 {
 			compatible = "ti,omap4-uart";
+			reg = <0x4806c000 0x100>;
+			interrupts = <0 73 0x4>;
 			ti,hwmods = "uart2";
 			clock-frequency = <48000000>;
 		};
 
 		uart3: serial@48020000 {
 			compatible = "ti,omap4-uart";
+			reg = <0x48020000 0x100>;
+			interrupts = <0 74 0x4>;
 			ti,hwmods = "uart3";
 			clock-frequency = <48000000>;
 		};
 
 		uart4: serial@4806e000 {
 			compatible = "ti,omap4-uart";
+			reg = <0x4806e000 0x100>;
+			interrupts = <0 70 0x4>;
 			ti,hwmods = "uart4";
 			clock-frequency = <48000000>;
 		};
 
 		uart5: serial@48066000 {
-			compatible = "ti,omap5-uart";
+			compatible = "ti,omap4-uart";
+			reg = <0x48066000 0x100>;
+			interrupts = <0 105 0x4>;
 			ti,hwmods = "uart5";
 			clock-frequency = <48000000>;
 		};
 
 		uart6: serial@48068000 {
-			compatible = "ti,omap6-uart";
+			compatible = "ti,omap4-uart";
+			reg = <0x48068000 0x100>;
+			interrupts = <0 106 0x4>;
 			ti,hwmods = "uart6";
 			clock-frequency = <48000000>;
 		};
 
 		mmc1: mmc@4809c000 {
 			compatible = "ti,omap4-hsmmc";
+			reg = <0x4809c000 0x400>;
+			interrupts = <0 83 0x4>;
 			ti,hwmods = "mmc1";
 			ti,dual-volt;
 			ti,needs-special-reset;
@@ -254,24 +294,32 @@
 
 		mmc2: mmc@480b4000 {
 			compatible = "ti,omap4-hsmmc";
+			reg = <0x480b4000 0x400>;
+			interrupts = <0 86 0x4>;
 			ti,hwmods = "mmc2";
 			ti,needs-special-reset;
 		};
 
 		mmc3: mmc@480ad000 {
 			compatible = "ti,omap4-hsmmc";
+			reg = <0x480ad000 0x400>;
+			interrupts = <0 94 0x4>;
 			ti,hwmods = "mmc3";
 			ti,needs-special-reset;
 		};
 
 		mmc4: mmc@480d1000 {
 			compatible = "ti,omap4-hsmmc";
+			reg = <0x480d1000 0x400>;
+			interrupts = <0 96 0x4>;
 			ti,hwmods = "mmc4";
 			ti,needs-special-reset;
 		};
 
 		mmc5: mmc@480d5000 {
 			compatible = "ti,omap4-hsmmc";
+			reg = <0x480d5000 0x400>;
+			interrupts = <0 59 0x4>;
 			ti,hwmods = "mmc5";
 			ti,needs-special-reset;
 		};
@@ -279,6 +327,25 @@
 		keypad: keypad@4ae1c000 {
 			compatible = "ti,omap4-keypad";
 			ti,hwmods = "kbd";
+		};
+
+		aess: aess@0x401f1000 {
+			compatible = "ti,omap4-aess";
+			reg = <0x401f1000 0x3ff>, /* MPU private access */
+			      <0x40180000 0xffff>, /* DMEM - MPU */
+			      <0x401a0000 0x1fff>, /* CMEM - MPU */
+			      <0x401c0000 0x5fff>, /* SMEM - MPU */
+			      <0x401e0000 0x1fff>, /* PMEM - MPU */
+			      <0x4901f000 0x3ff>, /* L3 Interconnect */
+			      <0x49080000 0xffff>, /* DMEM - MPU */
+			      <0x490a0000 0x1fff>, /* CMEM - MPU */
+			      <0x490ce000 0x5fff>, /* SMEM - MPU */
+			      <0x490e0000 0x1fff>; /* PMEM - MPU */
+			reg-names = "mpu", "dmem", "cmem", "smem", "pmem",
+				"dma","dmem_dma", "cmem_dma", "smem_dma", "pmem_dma";
+			interrupts = <0 99 0x4>;
+			interrupt-parent = <&gic>;
+			ti,hwmods = "aess";
 		};
 
 		mcpdm: mcpdm@40132000 {
