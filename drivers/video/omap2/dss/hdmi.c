@@ -834,7 +834,8 @@ static int hdmi_probe_audio(struct platform_device *pdev)
 
 	hdmi.audio_pdev = ERR_PTR(-EINVAL);
 
-	res = platform_get_resource(hdmi.pdev, IORESOURCE_MEM, 0);
+	res = platform_get_resource_byname(hdmi.pdev,
+					   IORESOURCE_MEM, "hdmi_wp");
 	if (!res) {
 		DSSERR("can't get IORESOURCE_MEM HDMI\n");
 		return -EINVAL;
