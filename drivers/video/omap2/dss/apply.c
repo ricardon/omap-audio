@@ -573,7 +573,7 @@ static void dss_ovl_write_regs(struct omap_overlay *ovl)
 	struct mgr_priv_data *mp;
 	int r;
 
-	DSSDBGF("%d", ovl->id);
+	DSSDBG("writing ovl %d regs", ovl->id);
 
 	if (!op->enabled || !op->info_dirty)
 		return;
@@ -608,7 +608,7 @@ static void dss_ovl_write_regs_extra(struct omap_overlay *ovl)
 	struct ovl_priv_data *op = get_ovl_priv(ovl);
 	struct mgr_priv_data *mp;
 
-	DSSDBGF("%d", ovl->id);
+	DSSDBG("writing ovl %d regs extra", ovl->id);
 
 	if (!op->extra_info_dirty)
 		return;
@@ -632,7 +632,7 @@ static void dss_mgr_write_regs(struct omap_overlay_manager *mgr)
 	struct mgr_priv_data *mp = get_mgr_priv(mgr);
 	struct omap_overlay *ovl;
 
-	DSSDBGF("%d", mgr->id);
+	DSSDBG("writing mgr %d regs", mgr->id);
 
 	if (!mp->enabled)
 		return;
@@ -658,7 +658,7 @@ static void dss_mgr_write_regs_extra(struct omap_overlay_manager *mgr)
 {
 	struct mgr_priv_data *mp = get_mgr_priv(mgr);
 
-	DSSDBGF("%d", mgr->id);
+	DSSDBG("writing mgr %d regs extra", mgr->id);
 
 	if (!mp->extra_info_dirty)
 		return;
@@ -666,22 +666,8 @@ static void dss_mgr_write_regs_extra(struct omap_overlay_manager *mgr)
 	dispc_mgr_set_timings(mgr->id, &mp->timings);
 
 	/* lcd_config parameters */
-	if (dss_mgr_is_lcd(mgr->id)) {
-		dispc_mgr_set_io_pad_mode(mp->lcd_config.io_pad_mode);
-
-		dispc_mgr_enable_stallmode(mgr->id, mp->lcd_config.stallmode);
-		dispc_mgr_enable_fifohandcheck(mgr->id,
-			mp->lcd_config.fifohandcheck);
-
-		dispc_mgr_set_clock_div(mgr->id, &mp->lcd_config.clock_info);
-
-		dispc_mgr_set_tft_data_lines(mgr->id,
-			mp->lcd_config.video_port_width);
-
-		dispc_lcd_enable_signal_polarity(mp->lcd_config.lcden_sig_polarity);
-
-		dispc_mgr_set_lcd_type_tft(mgr->id);
-	}
+	if (dss_mgr_is_lcd(mgr->id))
+		dispc_mgr_set_lcd_config(mgr->id, &mp->lcd_config);
 
 	mp->extra_info_dirty = false;
 	if (mp->updating)
@@ -786,7 +772,7 @@ void dss_mgr_start_update(struct omap_overlay_manager *mgr)
 	if (!dss_data.irq_enabled && need_isr())
 		dss_register_vsync_isr();
 
-	dispc_mgr_enable(mgr->id, true);
+	dispc_mgr_enable(mgr->id);
 
 	mgr_clear_shadow_dirty(mgr);
 
@@ -1035,10 +1021,13 @@ int dss_mgr_enable(struct omap_overlay_manager *mgr)
 	if (!mgr_manual_update(mgr))
 		mp->updating = true;
 
+	if (!dss_data.irq_enabled && need_isr())
+		dss_register_vsync_isr();
+
 	spin_unlock_irqrestore(&data_lock, flags);
 
 	if (!mgr_manual_update(mgr))
-		dispc_mgr_enable(mgr->id, true);
+		dispc_mgr_enable(mgr->id);
 
 out:
 	mutex_unlock(&apply_lock);
@@ -1063,7 +1052,7 @@ void dss_mgr_disable(struct omap_overlay_manager *mgr)
 		goto out;
 
 	if (!mgr_manual_update(mgr))
-		dispc_mgr_enable(mgr->id, false);
+		dispc_mgr_disable(mgr->id);
 
 	spin_lock_irqsave(&data_lock, flags);
 
