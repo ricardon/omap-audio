@@ -628,30 +628,6 @@ static int lg4591_enable(struct omap_dss_device *dssdev)
 	return lg4591_start(dssdev);
 }
 
-static int lg4591_resume(struct omap_dss_device *dssdev)
-{
-	dev_dbg(&dssdev->dev, "resume\n");
-
-	if (dssdev->state != OMAP_DSS_DISPLAY_SUSPENDED)
-		return -EINVAL;
-
-	return lg4591_start(dssdev);
-}
-
-static int lg4591_suspend(struct omap_dss_device *dssdev)
-{
-	dev_dbg(&dssdev->dev, "suspend\n");
-
-	if (dssdev->state != OMAP_DSS_DISPLAY_ACTIVE)
-		return -EINVAL;
-
-	lg4591_stop(dssdev);
-
-	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
-
-	return 0;
-}
-
 #if defined(CONFIG_OF)
 static const struct of_device_id lg4591_of_match[] = {
 	{
@@ -671,8 +647,6 @@ static struct omap_dss_driver lg4591_driver = {
 
 	.enable = lg4591_enable,
 	.disable = lg4591_disable,
-	.suspend = lg4591_suspend,
-	.resume = lg4591_resume,
 
 	.get_resolution = lg4591_get_resolution,
 	.get_recommended_bpp = omapdss_default_get_recommended_bpp,
