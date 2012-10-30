@@ -1134,17 +1134,24 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		goto err_panel_init;
 	}
 
+	if (pdev->dev.of_node)
+		r = hdmi_probe_of(pdev);
+	else if (pdev->dev.platform_data)
+		r = hdmi_probe_pdata(pdev);
+	if (r) {
+		DSSERR("can't finish of/pdata probe");
+		goto err_of_pdata;
+	}
+
 	dss_debugfs_create_file("hdmi", hdmi_dump_regs);
 
 	hdmi_init_output(pdev);
 
-	if (pdev->dev.of_node)
-		hdmi_probe_of(pdev);
-	else if (pdev->dev.platform_data)
-		hdmi_probe_pdata(pdev);
 
 	return 0;
 
+err_of_pdata:
+	hdmi_panel_exit();
 err_panel_init:
 	hdmi_put_clocks();
 	return r;
