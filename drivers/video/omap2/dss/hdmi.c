@@ -986,7 +986,7 @@ static int __init hdmi_probe_pdata(struct platform_device *pdev)
 	return 0;
 }
 
-static void __init hdmi_probe_of(struct platform_device *pdev)
+static int __init hdmi_probe_of(struct platform_device *pdev)
 {
 	struct device_node *node = pdev->dev.of_node;
 	struct device_node *child;
@@ -998,22 +998,26 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 	r = of_property_read_u32(node, "video-source", &v);
 	if (r) {
 		DSSERR("parsing channel failed\n");
-		return;
+		return -EINVAL;
 	}
 
 	channel = v;
 
 	node = of_find_compatible_node(node, NULL, "ti,tpd12s015");
-	if (!node)
-		return;
+	if (!node) {
+		DSSERR("No node found for ti,tpd12s015\n");
+		return -ENODEV;
+	}
 
 	child = of_get_next_available_child(node, NULL);
-	if (!child)
-		return;
+	if (!child) {
+		DSSERR("No child node found for %s\n", node->name);
+		return -ENODEV;
+	}
 
 	if (of_gpio_count(node) != 3) {
 		DSSERR("wrong number of GPIOs\n");
-		return;
+		return -EINVAL;
 	}
 
 	gpio = of_get_gpio(node, 0);
@@ -1021,7 +1025,7 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 		hdmi.ct_cp_hpd_gpio = gpio;
 	} else {
 		DSSERR("failed to parse CT CP HPD gpio\n");
-		return;
+		return -EINVAL;
 	}
 
 	gpio = of_get_gpio(node, 1);
@@ -1029,7 +1033,7 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 		hdmi.ls_oe_gpio = gpio;
 	} else {
 		DSSERR("failed to parse LS OE gpio\n");
-		return;
+		return -EINVAL;
 	}
 
 	gpio = of_get_gpio(node, 2);
@@ -1037,12 +1041,14 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 		hdmi.hpd_gpio = gpio;
 	} else {
 		DSSERR("failed to parse HPD gpio\n");
-		return;
+		return -EINVAL;
 	}
 
 	dssdev = dss_alloc_and_init_device(&pdev->dev);
-	if (!dssdev)
-		return;
+	if (!dssdev) {
+		DSSERR("failed to alloc/init dssdev");
+		return -ENOMEM;
+	}
 
 	dssdev->dev.of_node = child;
 	dssdev->type = OMAP_DISPLAY_TYPE_HDMI;
@@ -1053,15 +1059,18 @@ static void __init hdmi_probe_of(struct platform_device *pdev)
 	if (r) {
 		DSSERR("device %s init failed: %d\n", dssdev->name, r);
 		dss_put_device(dssdev);
-		return;
+		return r;
 	}
 
 	r = dss_add_device(dssdev);
 	if (r) {
 		DSSERR("dss_add_device failed %d\n", r);
+		hdmi_uninit_display(dssdev);
 		dss_put_device(dssdev);
-		return;
+		return r;
 	}
+
+	return 0;
 }
 
 static void __init hdmi_init_output(struct platform_device *pdev)
