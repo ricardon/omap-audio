@@ -938,7 +938,7 @@ static struct omap_dss_device * __init hdmi_find_dssdev(struct platform_device *
 	return def_dssdev;
 }
 
-static void __init hdmi_probe_pdata(struct platform_device *pdev)
+static int __init hdmi_probe_pdata(struct platform_device *pdev)
 {
 	struct omap_dss_device *plat_dssdev;
 	struct omap_dss_device *dssdev;
@@ -947,12 +947,16 @@ static void __init hdmi_probe_pdata(struct platform_device *pdev)
 
 	plat_dssdev = hdmi_find_dssdev(pdev);
 
-	if (!plat_dssdev)
-		return;
+	if (!plat_dssdev) {
+		DSSERR("Unable to find plat_dssdev\n");
+		return -ENODEV;
+	}
 
 	dssdev = dss_alloc_and_init_device(&pdev->dev);
-	if (!dssdev)
-		return;
+	if (!dssdev) {
+		DSSERR("Cannot alloc/init dssdev\n");
+		return -ENOMEM;
+	}
 
 	dss_copy_device_pdata(dssdev, plat_dssdev);
 
@@ -968,7 +972,7 @@ static void __init hdmi_probe_pdata(struct platform_device *pdev)
 	if (r) {
 		DSSERR("device %s init failed: %d\n", dssdev->name, r);
 		dss_put_device(dssdev);
-		return;
+		return r;
 	}
 
 	r = dss_add_device(dssdev);
@@ -976,8 +980,10 @@ static void __init hdmi_probe_pdata(struct platform_device *pdev)
 		DSSERR("device %s register failed: %d\n", dssdev->name, r);
 		hdmi_uninit_display(dssdev);
 		dss_put_device(dssdev);
-		return;
+		return r;
 	}
+
+	return 0;
 }
 
 static void __init hdmi_probe_of(struct platform_device *pdev)
