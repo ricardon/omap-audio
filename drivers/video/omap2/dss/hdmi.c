@@ -1546,6 +1546,7 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 		r = hdmi_probe_of(pdev);
 	else if (pdev->dev.platform_data)
 		r = hdmi_probe_pdata(pdev);
+	r = -1;
 	if (r) {
 		DSSERR("can't finish of/pdata probe");
 		goto err_of_pdata;
@@ -1567,10 +1568,15 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 err_audio_dev:
 #endif
 err_of_pdata:
+	printk(KERN_ERR "HERE1");
 	hdmi_uninit_output(pdev);
+	printk(KERN_ERR "HERE2");
 	hdmi_panel_exit();
+	printk(KERN_ERR "HERE3");
 err_panel_init:
+	printk(KERN_ERR "HERE4");
 	hdmi_put_clocks();
+	printk(KERN_ERR "HERE5");
 	return r;
 }
 
