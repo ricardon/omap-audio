@@ -444,6 +444,7 @@ static int __driver_attach(struct device *dev, void *data)
 	if (!driver_match_device(drv, dev))
 		return 0;
 
+	printk(KERN_ERR "~~~~~~GET PARENT LOCK[%s][%x]", drv->name, dev->parent);
 	if (dev->parent)	/* Needed for USB */
 		device_lock(dev->parent);
 	device_lock(dev);
@@ -452,6 +453,7 @@ static int __driver_attach(struct device *dev, void *data)
 	device_unlock(dev);
 	if (dev->parent)
 		device_unlock(dev->parent);
+	printk(KERN_ERR "~~~~~~REL PARENT LOCK[%s][%x]", drv->name, dev->parent);
 
 	return 0;
 }
@@ -467,6 +469,8 @@ static int __driver_attach(struct device *dev, void *data)
  */
 int driver_attach(struct device_driver *drv)
 {
+	if (!strcmp(drv->name, "hdmi_panel"))
+		printk(KERN_ERR "*******%s[%s]", __func__, drv->name);
 	return bus_for_each_dev(drv->bus, NULL, drv, __driver_attach);
 }
 EXPORT_SYMBOL_GPL(driver_attach);
@@ -537,29 +541,42 @@ void driver_detach(struct device_driver *drv)
 	struct device_private *dev_prv;
 	struct device *dev;
 
+	//if (!strcmp(drv->name, "hdmi_panel"))
+	printk(KERN_ERR "-------%s[%s]", __func__, drv->name);
+	printk(KERN_ERR "ICI1");
+
 	for (;;) {
 		spin_lock(&drv->p->klist_devices.k_lock);
 		if (list_empty(&drv->p->klist_devices.k_list)) {
 			spin_unlock(&drv->p->klist_devices.k_lock);
 			break;
 		}
+		printk(KERN_ERR "ICI2");
 		dev_prv = list_entry(drv->p->klist_devices.k_list.prev,
 				     struct device_private,
 				     knode_driver.n_node);
+		printk(KERN_ERR "ICI3");
 		dev = dev_prv->device;
 		get_device(dev);
+		printk(KERN_ERR "ICI4");
 		spin_unlock(&drv->p->klist_devices.k_lock);
+		printk(KERN_ERR "ICI4b");
 
+		printk(KERN_ERR"^^^GET PARENT LOCK[%x]", dev->parent);
 		if (dev->parent)	/* Needed for USB */
 			device_lock(dev->parent);
+		printk(KERN_ERR "ICI5");
 		device_lock(dev);
 		if (dev->driver == drv)
 			__device_release_driver(dev);
+		printk(KERN_ERR "ICI6");
 		device_unlock(dev);
 		if (dev->parent)
 			device_unlock(dev->parent);
+		printk(KERN_ERR "ICI7");
 		put_device(dev);
 	}
+	printk(KERN_ERR "ICI8");
 }
 
 /*

@@ -1462,6 +1462,9 @@ static int __init omapdss_hdmihw_probe(struct platform_device *pdev)
 	mutex_init(&hdmi.lock);
 	mutex_init(&hdmi.ip_data.lock);
 
+	printk(KERN_ERR ">>>>>>>HDMI PROBE!!!!!");
+	WARN_ON(1);
+
 	/* HDMI wrapper memory remap */
 	res = platform_get_resource_byname(hdmi.pdev,
 					   IORESOURCE_MEM, "hdmi_wp");
