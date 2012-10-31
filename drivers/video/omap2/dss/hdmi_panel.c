@@ -531,6 +531,8 @@ int hdmi_panel_init(void)
 
 void hdmi_panel_exit(void)
 {
+	printk(KERN_ERR ">>>%s", __func__);
 	omap_dss_unregister_driver(&hdmi_driver);
+	printk(KERN_ERR "<<<<%s", __func__);
 
 }

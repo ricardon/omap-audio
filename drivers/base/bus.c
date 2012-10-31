@@ -764,19 +764,29 @@ out_put_bus:
  */
 void bus_remove_driver(struct device_driver *drv)
 {
+	printk(KERN_ERR ">>>>>%s", __func__);
 	if (!drv->bus)
 		return;
 
+	printk(KERN_ERR "AQUI1");
 	if (!drv->suppress_bind_attrs)
 		remove_bind_files(drv);
 	driver_remove_attrs(drv->bus, drv);
+	printk(KERN_ERR "AQUI2");
 	driver_remove_file(drv, &driver_attr_uevent);
+	printk(KERN_ERR "AQUI3");
 	klist_remove(&drv->p->knode_bus);
+	printk(KERN_ERR "AQUI4");
 	pr_debug("bus: '%s': remove driver %s\n", drv->bus->name, drv->name);
 	driver_detach(drv);
+	printk(KERN_ERR "AQUI5");
 	module_remove_driver(drv);
+	printk(KERN_ERR "AQUI6");
 	kobject_put(&drv->p->kobj);
+	printk(KERN_ERR "AQUI7");
 	bus_put(drv->bus);
+	printk(KERN_ERR "AQUI8");
+	printk(KERN_ERR "<<<<%s", __func__);
 }
 
 /* Helper for bus_rescan_devices's iter */

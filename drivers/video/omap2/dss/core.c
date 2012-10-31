@@ -426,7 +426,9 @@ EXPORT_SYMBOL(omap_dss_register_driver);
 
 void omap_dss_unregister_driver(struct omap_dss_driver *dssdriver)
 {
+	printk(KERN_ERR ">>>%s", __func__);
 	driver_unregister(&dssdriver->driver);
+	printk(KERN_ERR "<<<<<<%s", __func__);
 }
 EXPORT_SYMBOL(omap_dss_unregister_driver);
 

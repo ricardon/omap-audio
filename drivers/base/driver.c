@@ -148,9 +148,13 @@ static void driver_remove_groups(struct device_driver *drv,
 {
 	int i;
 
+	printk(KERN_ERR ">>>%s", __func__);
+
 	if (groups)
 		for (i = 0; groups[i]; i++)
 			sysfs_remove_group(&drv->p->kobj, groups[i]);
+
+	printk(KERN_ERR "<<<<<%s", __func__);
 }
 
 /**
@@ -203,12 +207,14 @@ EXPORT_SYMBOL_GPL(driver_register);
  */
 void driver_unregister(struct device_driver *drv)
 {
+	printk(KERN_ERR ">>>%s", __func__);
 	if (!drv || !drv->p) {
 		WARN(1, "Unexpected driver unregister!\n");
 		return;
 	}
 	driver_remove_groups(drv, drv->groups);
 	bus_remove_driver(drv);
+	printk(KERN_ERR "<<<<%s", __func__);
 }
 EXPORT_SYMBOL_GPL(driver_unregister);
 
