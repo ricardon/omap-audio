@@ -72,6 +72,8 @@ config OMAP2_DSS_VENC
 config OMAP4_DSS_HDMI
 	bool "HDMI support"
         default y
+
+        select COMPANION_TPD12S015
 	help
 	  HDMI Interface. This adds the High Definition Multimedia Interface.
 	  See http://www.hdmi.org/ for HDMI specification.
