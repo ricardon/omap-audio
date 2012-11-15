@@ -25,6 +25,7 @@
 #include <video/omapdss.h>
 
 #define DRV_NAME "tpd12s015"
+#define USE_TPD
 
 static struct {
 	int ct_cp_hpd_gpio;
@@ -46,28 +47,30 @@ void tpd12s015_enable_data_link(bool enable)
 EXPORT_SYMBOL(tpd12s015_enable_data_link);
 
 
-void tpd12s015_detect()
+void tpd12s015_detect(void)
 {
 }
 EXPORT_SYMBOL(tpd12s015_detect);
 
-static int __init tpd12s015_probe(struct platform_device *pdev)
+static int __devinit tpd12s015_probe(struct platform_device *pdev)
 {
 	int r = 0;
-#if 1
+#if !defined(USE_TPD)
 	printk(KERN_ERR ">>>>>>>>>>>%s", __func__);
 #else
 	struct gpio gpios[] = {
-		{ tpd12s015.ct_cp_hpd_gpio, GPIOF_OUT_INIT_LOW, "hdmi_ct_cp_hpd" },
-		{ tpd12s015.ls_oe_gpio, GPIOF_OUT_INIT_LOW, "hdmi_ls_oe" },
-		{ tpd12s015.hpd_gpio, GPIOF_DIR_IN, "hdmi_hpd" },
+		{ -1, GPIOF_OUT_INIT_LOW, "hdmi_ct_cp_hpd" },
+		{ -1, GPIOF_OUT_INIT_LOW, "hdmi_ls_oe" },
+		{ -1, GPIOF_DIR_IN, "hdmi_hpd" },
 	};
 
-	tpd12s015.ct_cp_hpd_gpio = 60;
-	tpd12s015.ls_oe_gpio = 41;
-	tpd12s015.hpd_gpio = 63;
+	printk(KERN_ERR ">>>>>>--->>>>>%s", __func__);
 
+	tpd12s015.ct_cp_hpd_gpio = gpios[0].gpio = 60;
+	tpd12s015.ls_oe_gpio = gpios[1].gpio = 41;
+	tpd12s015.hpd_gpio = gpios[2].gpio = 63;
 
+	printk(KERN_ERR "will request [%d][%d][%d]", gpios[0].gpio, gpios[1].gpio, gpios[2].gpio);
 	r = gpio_request_array(gpios, ARRAY_SIZE(gpios));
 	if (r) {
 		dev_err(&pdev->dev, "Request GPIOs failed");
@@ -78,7 +81,7 @@ static int __init tpd12s015_probe(struct platform_device *pdev)
 	return r;
 }
 
-static int __exit tpd12s015_remove(struct platform_device *pdev)
+static int __devexit tpd12s015_remove(struct platform_device *pdev)
 {
 	printk(KERN_ERR ">>>>>>>>>>>%s", __func__);
 	return 0;
@@ -91,7 +94,7 @@ static struct platform_driver tpd12s015_driver = {
 		.owner = THIS_MODULE,
 	},
 	.probe = tpd12s015_probe,
-	.remove = __exit_p(tpd12s015_remove),
+	.remove = __devexit_p(tpd12s015_remove),
 };
 
 module_platform_driver(tpd12s015_driver);
