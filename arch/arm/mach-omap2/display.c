@@ -414,6 +414,13 @@ int __init omap_display_init(struct omap_dss_board_info *board_data)
 		}
 	}
 
+	pdev = create_simple_dss_pdev("tpd12s015", -1,
+			NULL, 0, NULL);
+	if (IS_ERR(pdev)) {
+		pr_err("Could not build platform_device for tpd12s015\n");
+		return PTR_ERR(pdev);
+	}
+
 	return 0;
 }
 
