@@ -19,6 +19,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define USE_TPD
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/err.h>
@@ -297,6 +298,7 @@ int ti_hdmi_4xxx_phy_enable(struct hdmi_ip_data *ip_data)
 	/* Write to phy address 3 to change the polarity control */
 	REG_FLD_MOD(phy_base, HDMI_TXPHY_PAD_CFG_CTRL, 0x1, 27, 27);
 
+#if !defined(USE_TPD)
 	r = request_threaded_irq(gpio_to_irq(ip_data->hpd_gpio),
 				 NULL, hpd_irq_handler,
 				 IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
@@ -313,13 +315,15 @@ int ti_hdmi_4xxx_phy_enable(struct hdmi_ip_data *ip_data)
 		hdmi_set_phy_pwr(ip_data, HDMI_PHYPWRCMD_OFF);
 		return r;
 	}
-
+#endif
 	return 0;
 }
 
 void ti_hdmi_4xxx_phy_disable(struct hdmi_ip_data *ip_data)
 {
+#if !defined(USE_TPD)
 	free_irq(gpio_to_irq(ip_data->hpd_gpio), ip_data);
+#endif
 
 	hdmi_set_phy_pwr(ip_data, HDMI_PHYPWRCMD_OFF);
 }

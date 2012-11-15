@@ -20,6 +20,7 @@
  */
 
 #define DSS_SUBSYS_NAME "HDMI"
+#define USE_TPD
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -35,6 +36,7 @@
 #include <linux/gpio.h>
 #include <linux/regulator/consumer.h>
 #include <video/omapdss.h>
+#include <video/tpd12s015.h>
 
 #include "ti_hdmi.h"
 #include "dss.h"
@@ -333,6 +335,7 @@ static void hdmi_runtime_put(void)
 
 static int __init hdmi_init_display(struct omap_dss_device *dssdev)
 {
+#if !defined(USE_TPD)
 	int r;
 
 	struct gpio gpios[] = {
@@ -340,6 +343,7 @@ static int __init hdmi_init_display(struct omap_dss_device *dssdev)
 		{ hdmi.ls_oe_gpio, GPIOF_OUT_INIT_LOW, "hdmi_ls_oe" },
 		{ hdmi.hpd_gpio, GPIOF_DIR_IN, "hdmi_hpd" },
 	};
+#endif
 
 	DSSDBG("init_display\n");
 
@@ -362,10 +366,11 @@ static int __init hdmi_init_display(struct omap_dss_device *dssdev)
 		hdmi.vdda_hdmi_dac_reg = reg;
 	}
 
+#if !defined(USE_TPD)
 	r = gpio_request_array(gpios, ARRAY_SIZE(gpios));
 	if (r)
 		return r;
-
+#endif
 	return 0;
 }
 
@@ -373,9 +378,11 @@ static void hdmi_uninit_display(struct omap_dss_device *dssdev)
 {
 	DSSDBG("uninit_display\n");
 
+#if !defined(USE_TPD)
 	gpio_free(hdmi.ct_cp_hpd_gpio);
 	gpio_free(hdmi.ls_oe_gpio);
 	gpio_free(hdmi.hpd_gpio);
+#endif
 }
 
 static const struct hdmi_config *hdmi_find_timing(
@@ -519,8 +526,13 @@ static int hdmi_power_on_core(struct omap_dss_device *dssdev)
 {
 	int r;
 
+#if !defined(USE_TPD)
 	gpio_set_value(hdmi.ct_cp_hpd_gpio, 1);
 	gpio_set_value(hdmi.ls_oe_gpio, 1);
+#else
+	tpd12s015_power_up_sink(1);
+	tpd12s015_enable_data_link(1);
+#endif
 
 	/* wait 300us after CT_CP_HPD for the 5V power output to reach 90% */
 	udelay(300);
@@ -541,8 +553,13 @@ static int hdmi_power_on_core(struct omap_dss_device *dssdev)
 err_runtime_get:
 	regulator_disable(hdmi.vdda_hdmi_dac_reg);
 err_vdac_enable:
+#if !defined(USE_TPD)
 	gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
 	gpio_set_value(hdmi.ls_oe_gpio, 0);
+#else
+	tpd12s015_power_up_sink(1);
+	tpd12s015_enable_data_link(1);
+#endif
 	return r;
 }
 
@@ -550,8 +567,13 @@ static void hdmi_power_off_core(struct omap_dss_device *dssdev)
 {
 	hdmi_runtime_put();
 	regulator_disable(hdmi.vdda_hdmi_dac_reg);
+#if !defined(USE_TPD)
 	gpio_set_value(hdmi.ct_cp_hpd_gpio, 0);
 	gpio_set_value(hdmi.ls_oe_gpio, 0);
+#else
+	tpd12s015_power_up_sink(0);
+	tpd12s015_enable_data_link(0);
+#endif
 }
 
 static int hdmi_power_on_full(struct omap_dss_device *dssdev)
@@ -1064,9 +1086,11 @@ static void __init hdmi_probe_pdata(struct platform_device *pdev)
 
 	priv = dssdev->data;
 
+#if !defined(USE_TPD)
 	hdmi.ct_cp_hpd_gpio = priv->ct_cp_hpd_gpio;
 	hdmi.ls_oe_gpio = priv->ls_oe_gpio;
 	hdmi.hpd_gpio = priv->hpd_gpio;
+#endif
 
 	dssdev->channel = OMAP_DSS_CHANNEL_DIGIT;
 
