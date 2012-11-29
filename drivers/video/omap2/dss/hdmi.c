@@ -842,11 +842,13 @@ static int hdmi_probe_audio(struct platform_device *pdev)
 	}
 
 	/*
-	 * Pass this resource to audio drivers to find the DMA port address.
+	 * Pass DMA audio port to audio drivers.
 	 * Audio drivers should not ioremap it.
 	 */
-	aud_res[0].start = res->start;
-	aud_res[0].end = res->end;
+	hdmi.ip_data.ops->audio_get_dma_port(&port_offset, &port_size);
+
+	aud_res[0].start = res->start + port_offset;
+	aud_res[0].end =  aud_res[0].start + port_size - 1;
 
 	res = platform_get_resource(hdmi.pdev, IORESOURCE_DMA, 0);
 	if (!res) {
