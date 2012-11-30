@@ -383,16 +383,6 @@ static struct platform_device sdp4430_dmic_codec = {
 	.id	= -1,
 };
 
-static struct platform_device sdp4430_hdmi_audio_codec = {
-	.name	= "hdmi-audio-codec",
-	.id	= -1,
-};
-
-static struct platform_device sdp4430_hdmi_audio_card = {
-	.name	= "omap-hdmi-audio-card",
-	.id	= -1,
-};
-
 static struct omap_abe_twl6040_data sdp4430_abe_audio_data = {
 	.card_name = "SDP4430",
 	.has_hs		= ABE_TWL6040_LEFT | ABE_TWL6040_RIGHT,
@@ -427,8 +417,6 @@ static struct platform_device *sdp4430_devices[] __initdata = {
 	&sdp4430_vbat,
 	&sdp4430_dmic_codec,
 	&sdp4430_abe_audio,
-	&sdp4430_hdmi_audio_codec,
-	&sdp4430_hdmi_audio_card,
 };
 
 static struct omap_musb_board_data musb_board_data = {
